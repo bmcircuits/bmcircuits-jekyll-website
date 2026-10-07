@@ -3,7 +3,7 @@ title: Raspberry Pi LCD HAT — KOE FPC Display Interface
 category: PCB Design
 date: 2022-10-17
 tech: RPi HAT · DPI · 2-layer
-image: /assets/projects/rPI_LCD_Hat/rPI_KOE_LCD_Board.png
+image: #/assets/projects/rPI_LCD_Hat/rPI_KOE_LCD_Board.png
 specs:
   - label: Form factor
     value: Raspberry Pi HAT

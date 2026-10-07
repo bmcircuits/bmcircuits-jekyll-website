@@ -1,0 +1,20 @@
+# BMCircuits
+
+Sydney-based electronic design house.
+
+## Services
+- PCB and hardware design (schematic capture, multi-layer layout, impedance control, DFM)
+- Embedded systems design (STM32, Raspberry Pi, RTOS, BSP development)
+- Firmware development (C/C++, I2C, SPI, UART, CAN, USB, OTA updates)
+- CAD enclosure and sheet metal design (SolidWorks, injection moulding, CNC)
+- Production test fixture development (bed-of-nails, functional test rigs)
+
+## Industries served
+Medical devices, automotive, fire industry, consumer electronics, agriculture
+
+## Location
+Sydney, New South Wales, Australia — available globally
+
+## Contact
+info@bmcircuits.com
+https://bmcircuits.com/contact/
