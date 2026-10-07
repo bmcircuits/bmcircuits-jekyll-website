@@ -58,11 +58,11 @@ interfaces without any additional hardware.
 The touchscreen controller is a Synaptics RMI4-compatible device,
 interfaced over I2C. Rather than using the Pi's dedicated hardware
 I2C pins — which conflict with the DPI pin allocation — the I2C bus is
-hardwired to a pair of spare GPIOs and driven using the `i2c-gpio` bit-bang
+hardwired to a pair of spare GPIOs and driven using the `i2c-gpio` bit-bang 
 kernel driver.
 
 Checkout my blog post for getting the synaptics RMI4 driver setup:
-[→ Bit-banging I2C for the RMI4 driver]({{ '/rPI-RMI4-bitbang-I2C-driver/' | relative_url }})
+[→ Bit-banging I2C for the RMI4 driver]({{ '/rPi-RMI4-bitbang-I2C-driver/' | relative_url }})
 
 ## Mechanical
 

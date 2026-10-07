@@ -557,7 +557,7 @@ footer {
   margin: 40px 0 16px;
 }
 
-.project-body p { margin-bottom: 20px; }
+.project-body p { margin-bottom: 20px; text-align: justify;}
 
 /* ─── BLOG ─── */
 .blog-list {
@@ -671,8 +671,8 @@ footer {
   flex-wrap: wrap;
 }
 
-.post-body { font-size: 16px; line-height: 1.8; color: var(--text-secondary); }
-.post-body p { margin-bottom: 20px; }
+.post-body { font-size: 16px; line-height: 1.8; color: var(--text-secondary); text-align: justify;}
+.post-body p { margin-bottom: 20px; text-align: justify;}
 .post-body h2 { font-family: var(--serif); font-size: 24px; font-weight: 300; color: var(--text); margin: 40px 0 16px; }
 .post-body h3 { font-size: 18px; font-weight: 500; color: var(--text); margin: 28px 0 12px; }
 .post-body ul, .post-body ol { padding-left: 24px; margin-bottom: 20px; }
@@ -965,6 +965,7 @@ transition: transform 0.15s, background 0.15s;
     color: var(--text-secondary);
     line-height: 1.8;
     margin-bottom: 16px;
+    text-align: justify;
   }
   
   .about-cta {
@@ -1082,3 +1083,165 @@ transition: transform 0.15s, background 0.15s;
       grid-template-columns: 1fr;
     }
   }
+
+
+/* ─── POST IMAGES ─── */
+
+/* Full width — spans the whole content column */
+.post-body img,
+.post-body figure {
+  width: 100%;
+  margin: 8px 0;
+}
+
+.post-body figure img {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.post-body figcaption {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: center;
+  margin-top: 6px;
+  letter-spacing: 0.05em;
+}
+
+/* Half width — floats to the right, text wraps around it */
+.post-body figure.half {
+  width: 48%;
+  float: right;
+  margin: 8px 0 24px 32px;
+}
+
+/* Small — centred, doesn't fill full width */
+.post-body figure.small {
+  width: 60%;
+  margin: 32px auto;
+}
+
+/* Clear floats after a floated image */
+.post-body .clearfix {
+  clear: both;
+}
+
+
+/* ─── FOOTNOTES ─── */
+.post-body .footnotes {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+}
+
+.post-body .footnotes ol {
+    padding-left: 20px;
+}
+
+.post-body .footnotes li {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    line-height: 1.7;
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
+}
+
+.post-body .footnotes li p {
+    margin-bottom: 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-align: left;
+}
+
+/* The footnote number in the body text */
+.post-body sup {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--gold);
+    font-weight: 500;
+}
+
+.post-body sup a {
+    color: var(--gold);
+    text-decoration: none;
+}
+
+.post-body sup a:hover {
+    text-decoration: underline;
+}
+
+/* Back arrow link in footnote */
+.post-body .footnotes a.reversefootnote {
+    color: var(--gold);
+    text-decoration: none;
+    margin-left: 4px;
+}
+
+/* ─── POST SHARE ─── */
+.post-share {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+}
+
+.post-share-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 14px;
+    text-align: left !important;
+}
+
+.post-share-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.share-btn:hover {
+    color: var(--gold-dark);
+    border-color: var(--border-strong);
+    background: var(--gold-pale);
+}
+
+.post-content-wrap {
+    display: flex;
+    flex-direction: column;
+}
+
+.post-content-wrap .post-body {
+    display: contents;
+}
+
+.post-share {
+    order: 99;
+    margin-top: 0;
+}
+
+.post-body .footnotes {
+    order: 100;
+    margin-top: 10;
+}

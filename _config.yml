@@ -39,3 +39,8 @@ exclude:
   - README.md
   - node_modules
   - wrangler.jsonc
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
