@@ -8,7 +8,7 @@ excerpt: How I got a Synaptics RMI4 touch controller driver working through bit-
 
 Below is a guide for getting a Synaptics RMI4 touchscreen working on a Raspberry Pi using bit-bang I2C.
 
-Over on the [rPI_TFT_LCD_Driver]({{ '/rPI_TFT_LCD_Driver/' | relative_url }}) project, the Raspberry Pi interfaces with the LCD panel through [DPI](https://pinout.xyz/pinout/dpi) (Display Parallel Interface). DPI uses a large number of GPIO pins, including the pins normally used for the hardware I2C peripheral (GPIO 2 & 3), so the built-in I2C hardware can't be used for the touchscreen.
+Over on the [rPI_TFT_LCD_Driver]({{ '/rpi-tft-lcd-driver/' | relative_url }}) project, the Raspberry Pi interfaces with the LCD panel through [DPI](https://pinout.xyz/pinout/dpi) (Display Parallel Interface). DPI uses a large number of GPIO pins, including the pins normally used for the hardware I2C peripheral (GPIO 2 & 3), so the built-in I2C hardware can't be used for the touchscreen.
 
 The project uses Mode 6, RGB666, which only drives 18 of the 28 data pins, leaving a few GPIOs free. GPIO 19 and GPIO 26 were available, so I used those to bit-bang the I2C protocol for the RMI4 touchscreen. Bit-bang I2C is implemented in software using the `i2c-gpio` kernel driver, which toggles GPIO pins directly rather than using dedicated I2C hardware.
 
@@ -28,7 +28,7 @@ sudo apt install crossbuild-essential-arm64 bc bison flex libssl-dev make libncu
 
 ### Confirming the touchscreen I2C address
 
-Before compiling anything, it's worth confirming the touchscreen is visible on the I2C bus. With the `i2c-gpio` overlay loaded in `/boot/config.txt` (covered in the [config.txt section](#enabling-the-overlay-in-configtxt) below), run:
+Before compiling anything, it's worth confirming the touchscreen is visible on the I2C bus and what address the synaptics driver responses too. With the `i2c-gpio` overlay loaded in `/boot/config.txt` (covered in the [config.txt section](#enabling-the-overlay-in-configtxt) below), run:
 
 ```
 i2cdetect -l
@@ -47,7 +47,7 @@ A successful scan shows `0x20` in the address grid:
 ...
 ```
 
-> If nothing shows at `0x20`, check the `i2c-gpio` overlay is active, the SDA/SCL GPIO numbers match your wiring, and that pull-up resistors are fitted on both I2C lines. I2C requires pull-ups to VCC (3.3 V on a Raspberry Pi) to work.
+> If nothing shows at, check the `i2c-gpio` overlay is active, the SDA/SCL GPIO numbers match your wiring, and that pull-up resistors are fitted on both I2C lines. I2C requires pull-ups to VCC (3.3 V on a Raspberry Pi) to work.
 
 ---
 
@@ -69,7 +69,7 @@ KERNEL=kernel8
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- bcm2711_defconfig
 ```
 
-> `kernel8` targets the 64-bit ARMv8 kernel for the Pi 4. For a 32-bit build, use `kernel7l`.
+> `kernel8` targets the 64-bit ARMv8 kernel for the Pi 4. For a 32-bit build, use `kernel7l` or one of the other options to suit your model.
 
 Open `menuconfig` to enable the RMI4 driver options:
 
@@ -94,7 +94,7 @@ Device Drivers
             └─ [*] RMI4 I2C Support                  (CONFIG_RMI4_I2C)
 ```
 
-Use arrow keys to navigate, **Enter** to expand a menu, **Y** to mark an option as built-in (`[*]`), and **/** to search by name.
+Use arrow keys (↓,↑) to navigate, Enter (↵) to expand a menu, **Y** to mark an option as built-in (`[*]`).
 
 <figure>
   <img src="{{ 'assets/projects/rmi4_rpi_installing/menuconfig_RMI4_bus_support.png' | relative_url }}" 
@@ -107,7 +107,7 @@ Press **Esc** until prompted to save, then confirm. Now build the kernel:
 make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image modules dtbs
 ```
 
-> `$(nproc)` uses all available CPU cores. On a modern desktop this takes 10–20 minutes. Compiling directly on a Pi 4 can take several hours — cross-compiling is strongly recommended.
+> `$(nproc)` uses all available CPU cores. On a modern desktop like mine this takes less than 5 minutes. Compiling directly on a Pi 4 can take several hours, I strongly recommend cross-compiling, as each mistake or modification only wastes time.
 
 ---
 
@@ -122,7 +122,6 @@ lsblk
 You should see two partitions: the boot partition (FAT32) and the root filesystem (ext4). Mount both:
 
 ```
-mkdir -p mnt/boot mnt/root
 sudo mount /dev/sda1 mnt/boot
 sudo mount /dev/sda2 mnt/root
 ```
@@ -138,8 +137,7 @@ sudo cp mnt/boot/$KERNEL.img mnt/boot/$KERNEL-backup.img
 Install the kernel modules:
 
 ```
-sudo env PATH=$PATH make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
-    INSTALL_MOD_PATH=mnt/root modules_install
+sudo env PATH=$PATH make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_MOD_PATH=mnt/root modules_install
 ```
 
 Copy the kernel image, device tree blobs, and overlays:
@@ -250,13 +248,13 @@ sudo umount mnt/root
 
 ## Enabling the overlay in config.txt
 
-Insert the SD card back into the Pi and edit `/boot/config.txt`, adjusting the GPIO pin numbers to match your wiring:
+Edit `/boot/config.txt`, adjusting the GPIO pin numbers to match your wiring:
 
 ```ini
 # Bit-bang I2C on GPIO 26 (SDA) and GPIO 19 (SCL)
 dtoverlay=i2c-gpio,i2c_gpio_sda=26,i2c_gpio_scl=19
 
-# RMI4 touchscreen overlay
+# our custom RMI4 i2c overlay we created
 dtoverlay=rmi4-i2c
 ```
 
