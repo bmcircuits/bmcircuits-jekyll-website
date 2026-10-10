@@ -1245,3 +1245,15 @@ transition: transform 0.15s, background 0.15s;
     order: 100;
     margin-top: 10;
 }
+
+h1, h2, h3, h4, h5, h6 {
+    scroll-margin-top: 80px;
+}
+
+.table-sm table {
+    font-size: 0.85rem;
+}
+
+.table-sm table code {
+    font-size: 0.7rem;
+}

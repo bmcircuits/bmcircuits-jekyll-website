@@ -1,0 +1,153 @@
+ssh bobsta@192.168.86.62
+
+
+
+i2cdetect -l
+
+i2cdetect -y 11
+
+
+when building the kernel:
+
+cd linux
+
+KERNEL=kernel8
+
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- bcm2711_defconfig
+
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- menuconfig 
+
+make -j36 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- Image modules dtbs
+
+sudo mount /dev/sda1 mnt/boot
+sudo mount /dev/sda2 mnt/root
+
+sudo env PATH=$PATH make -j12 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- INSTALL_MOD_PATH=mnt/root modules_install
+
+sudo cp arch/arm64/boot/Image mnt/boot/$KERNEL.img
+
+sudo cp arch/arm64/boot/dts/broadcom/*.dtb mnt/boot/
+
+sudo cp arch/arm64/boot/dts/overlays/*.dtb* mnt/boot/overlays/
+
+sudo cp arch/arm64/boot/dts/overlays/README mnt/boot/overlays/
+
+sudo umount mnt/boot
+
+sudo umount mnt/root
+
+
+
+
+dtc -I dts -O dtb -o rmi4-i2c.dtbo rmi4-i2c.dts
+
+
+
+
+# For more options and information see
+# http://rptl.io/configtxt
+# Some settings may impact device functionality. See link above for details
+
+# Uncomment some or all of these to enable the optional hardware interfaces
+#dtparam=i2c_arm=on
+#dtparam=i2s=on
+#dtparam=spi=on
+
+# Enable audio (loads snd_bcm2835)
+dtparam=audio=on
+
+# Additional overlays and parameters are documented
+# /boot/firmware/overlays/README
+
+# Automatically load overlays for detected cameras
+camera_auto_detect=1
+
+# Automatically load overlays for detected DSI displays
+display_auto_detect=1
+
+# Automatically load initramfs files, if found
+auto_initramfs=1
+
+# Enable DRM VC4 V3D driver
+dtoverlay=vc4-kms-v3d
+max_framebuffers=2
+
+# Don't have the firmware create an initial video= setting in cmdline.txt.
+# Use the kernel's default instead.
+disable_fw_kms_setup=1
+
+# Run in 64-bit mode
+arm_64bit=1
+
+# Disable compensation for displays with overscan
+disable_overscan=1
+
+# Run as fast as firmware / board allows
+arm_boost=1
+
+[cm4]
+# Enable host mode on the 2711 built-in XHCI USB controller.
+# This line should be removed if the legacy DWC2 controller is required
+# (e.g. for USB device mode) or if USB support is not required.
+otg_mode=1
+
+[cm5]
+dtoverlay=dwc2,dr_mode=host
+
+[all]
+
+
+
+
+
+
+/dts-v1/;
+/plugin/;
+
+/{
+    compatible = "brcm,bcm2835", "brcm,bcm2836", "brcm,bcm2708", "brcm,bcm2709";
+
+    fragment@0{
+          target = <&i2c_gpio>;
+          __overlay__{
+             #address-cells = <1>;
+             #size-cells = <0>;
+             status = "okay";
+
+                rmi4-i2c-dev@20 {
+                        compatible = "syna,rmi4-i2c";
+                        reg = <0x20>;
+                        #address-cells = <1>;
+                        #size-cells = <0>;
+                        interrupt-parent = <&gpio>;
+                        interrupts = <10 2>;
+                        vdd-supply = <&s3058a_reset>;
+
+                        rmi4-f01@1 {
+                                reg = <0x1>;
+                                syna,nosleep-mode = <1>;
+                        };
+                                
+                        rmi4-f11@11 {
+                                reg = <0x11>;
+                                touchscreen-inverted-y;
+                                syna,sensor-type = <1>;
+                        };
+                };
+            };
+        };
+
+        fragment@1 {
+                target-path = "/";
+                __overlay__ {
+                        s3058a_reset: s3058a_reset {
+                                compatible = "regulator-fixed";
+				regulator-name = "s3058a_reset";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				gpio = <&gpio 11 0>;
+				enable-active-high;
+			};
+		};
+	};                        
+};

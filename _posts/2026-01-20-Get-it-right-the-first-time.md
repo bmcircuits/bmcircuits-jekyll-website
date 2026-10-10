@@ -1,12 +1,12 @@
 ---
 title: Get it right the first time? or execute a prototype.
-date: 2026-01-20
+date: 2026-10-8
 read_time: 5 min read
 tags: [Process, Project management]
 excerpt: Why I believe that getting a first prototype out the door quicker is better in the long run.
 ---
 
-Have you spent months carefully designing a PCB, expecting the first prototype to come back perfect because you spent the extra time to repeatedly review it.... only to find that the your first prototype had an issue that had to be fixed? This is a situation I have been in before.
+Have you spent months carefully designing a PCB, expecting the first prototype to come back perfect because you spent the extra time to repeatedly review it.... only to find that your first prototype had an issue that had to be fixed? This is a situation I have been in before.
 
 <h2 align="center">Product development life cycle</h2>
 <figure>

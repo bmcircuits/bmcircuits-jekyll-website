@@ -1,6 +1,6 @@
 # BMC Jekyll Website
 
-## install and basic
+## install and basic setup
 ```bash
 gem install bundler jekyll
 bundle install
@@ -21,8 +21,9 @@ Then inside bash terminal on the root directory of website repo, run the followi
 ```bash
 bundle exec jekyll serve --host 0.0.0.0
 ```
+\--host 0.0.0.0, is important as it allows other devices on the network to connect.
 
-Then open `http://192.168.8.160:4000/bmcircuits/` in your browser. where the IP address is the one found above in the IPv4 Address above.
+Then open `http://192.168.8.160:4000/bmcircuits/`, where the IP address is the one found above in the IPv4 Address above.
 
 ---
 
@@ -64,14 +65,14 @@ tags: [PCB Design, Firmware]
 excerpt: One sentence summary shown in the blog listing.
 ---
 
-Your post content in Markdown here.
+post content...
 ```
 
 ---
 
 ## Adding a portfolio project
 
-Create a new file in `_portfolio/` named `project-slug.md`:
+Create a new file in `_portfolio/` named `project.md`:
 
 ```markdown
 ---
@@ -87,7 +88,7 @@ specs:
     value: "2025"
 ---
 
-Project description in Markdown here.
+Project description...
 ```
 
 Add any project images to `assets/images/projects/`.
