@@ -230,7 +230,7 @@ footer {
 }
 
 .hero h1 {
-    font-family: "Manrope", sans-serif;
+    /* font-family: var(--mono); */
     font-size: clamp(46px, 6vw, 72px);
     font-weight: 500;
     line-height: 1.05;
@@ -1085,23 +1085,27 @@ transition: transform 0.15s, background 0.15s;
   }
 
 
-/* ─── POST IMAGES ─── */
+/* ─── POST & PROJECT IMAGES ─── */
 
 /* Full width — spans the whole content column */
 .post-body img,
-.post-body figure {
+.post-body figure,
+.project-body img,
+.project-body figure  {
   width: 100%;
   margin: 8px 0;
 }
 
-.post-body figure img {
+.post-body figure img,
+.project-body figure img {
   width: 100%;
   border-radius: 8px;
   border: 1px solid var(--border);
   display: block;
 }
 
-.post-body figcaption {
+.post-body figcaption, 
+.project-body figcaption {
   font-family: var(--mono);
   font-size: 11px;
   color: var(--text-tertiary);
@@ -1111,20 +1115,23 @@ transition: transform 0.15s, background 0.15s;
 }
 
 /* Half width — floats to the right, text wraps around it */
-.post-body figure.half {
+.post-body figure.half,
+.project-body figure.half {
   width: 48%;
   float: right;
   margin: 8px 0 24px 32px;
 }
 
 /* Small — centred, doesn't fill full width */
-.post-body figure.small {
+.post-body figure.small,
+.project-body figure.small {
   width: 60%;
   margin: 32px auto;
 }
 
 /* Clear floats after a floated image */
-.post-body .clearfix {
+.post-body .clearfix,
+.project-body .clearfix {
   clear: both;
 }
 
@@ -1256,4 +1263,12 @@ h1, h2, h3, h4, h5, h6 {
 
 .table-sm table code {
     font-size: 0.7rem;
+}
+
+a {
+  color: var(--gold);
+}
+
+a:hover {
+  color: #d4a012;
 }

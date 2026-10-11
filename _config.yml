@@ -4,7 +4,6 @@ url: "https://bmcircuits.com" # Github Pages = "https://bmcircuits.github.io"
 baseurl: "" # Github Pages = "/bmcircuits"
 
 author:
-  name: Bobby McGlone
   email: info@bmcircuits.com
   location: Sydney, Australia
 

@@ -8,7 +8,7 @@ excerpt: How I got a Synaptics RMI4 touch controller driver working through bit-
 
 Below is a guide for getting a Synaptics RMI4 touchscreen working on a Raspberry Pi using bit-bang I2C.
 
-Over on the [rPI_TFT_LCD_Driver]({{ '/rpi-tft-lcd-driver/' | relative_url }}) project, the Raspberry Pi interfaces with the LCD panel through [DPI](https://pinout.xyz/pinout/dpi) (Display Parallel Interface). DPI uses a large number of GPIO pins, including the pins normally used for the hardware I2C peripheral (GPIO 2 & 3), so the built-in I2C hardware can't be used for the touchscreen.
+Over on the [rPI_TFT_LCD_Driver]({{ 'portfolio/rpi-tft-lcd-driver/' | relative_url }}) project, the Raspberry Pi interfaces with the LCD panel through [DPI](https://pinout.xyz/pinout/dpi) (Display Parallel Interface). DPI uses a large number of GPIO pins, including the pins normally used for the hardware I2C peripheral (GPIO 2 & 3), so the built-in I2C hardware can't be used for the touchscreen.
 
 The project uses Mode 6, RGB666, which only drives 18 of the 28 data pins, leaving a few GPIOs free. GPIO 19 and GPIO 26 were available, so I used those to bit-bang the I2C protocol for the RMI4 touchscreen. Bit-bang I2C is implemented in software using the `i2c-gpio` kernel driver, which toggles GPIO pins directly rather than using dedicated I2C hardware.
 
@@ -47,7 +47,7 @@ A successful scan shows `0x20` in the address grid:
 ...
 ```
 
-> If nothing shows at, check the `i2c-gpio` overlay is active, the SDA/SCL GPIO numbers match your wiring, and that pull-up resistors are fitted on both I2C lines. I2C requires pull-ups to VCC (3.3 V on a Raspberry Pi) to work.
+> If nothing shows, check the `i2c-gpio` overlay is active, the SDA/SCL GPIO numbers match your wiring, and that pull-up resistors are fitted on both I2C lines. I2C requires pull-ups to VCC (3.3 V on a Raspberry Pi) to work.
 
 ---
 
@@ -260,10 +260,8 @@ dtoverlay=rmi4-i2c
 
 Reboot the Pi, then confirm the touchscreen is detected:
 
-```ini
-i2cdetect -l          # list all I2C buses
-i2cdetect -y 11       # scan bus 11 for devices
-lsmod | grep rmi      # confirm RMI4 modules loaded
+```
+lsmod | grep rmi
 ```
 
-If `lsmod` shows `rmi_core` and `rmi_i2c`, and `i2cdetect` shows `20` on the bus, everything is working.
+If `lsmod` shows `rmi_core` and `rmi_i2c` the synaptics RMI4 has been added in correctly.
