@@ -95,4 +95,16 @@ Add any project images to `assets/images/projects/`.
 
 ---
 
+## Formating videos
+
+Using ffmepg, the following was the last command used:  
+`ffmpeg -i bike_light_tail_raw.mp4 -ss 00:00:01 -to 00:00:04 -vcodec libx264 -crf 28 -an -vf "crop=in_w:in_h/2:0:in_h/3" output.mp4`  
+
+`-ss` is start time, `-to` is end time, `-t` is duration from the start point
+`-an` removes audio  
+`-crf 28` controls quality — lower = better quality, larger file. Range is 0–51, 18–28 is typical for web  
+`-vf scale=576:512` forces exact dimensions — if the aspect ratio doesn't match it will stretch. Use `-vf scale=576:-1` to set width and auto-calculate height, or `-vf scale=-1:512` for height and auto-calculate width  
+`-vf crop=w:h:x:y` Cuts a region out — x/y is the top-left starting point of the crop  
+You can chain filters: `-vf "crop=576:512:0:0,scale=288:256"` crops then scales  
+Phone videos often have rotation in metadata — add `-vf transpose=1` to physically rotate if it displays sideways  
 

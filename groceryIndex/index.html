@@ -1,0 +1,476 @@
+---
+layout: null
+sitemap: false
+---
+{% raw %}
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Groceries">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#0f766e">
+<title>Grocery Index</title>
+<style>
+:root{--bg:#f6f7f5;--card:#fff;--ink:#16211c;--mut:#667469;--line:#e2e6e1;--acc:#0f766e;--onacc:#fff;--up:#b4281e;--down:#157a43;--warn:#9a6700}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1512;--card:#18201c;--ink:#eaf0ec;--mut:#92a199;--line:#27312c;--acc:#4fd1c1;--onacc:#06231f;--up:#ff8a80;--down:#6fdc9a;--warn:#e3b341}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px calc(48px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;background:var(--bg);padding:calc(10px + env(safe-area-inset-top)) 0 4px;z-index:5}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+h1{font-size:18px;margin:0}
+.acts{display:flex;gap:6px}
+.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:7px 11px;cursor:pointer;position:relative}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--onacc);font-weight:600}
+.btn[disabled]{opacity:.6}
+.badge{display:none;margin-left:6px;background:var(--onacc);color:var(--acc);border-radius:99px;font-size:12px;padding:0 7px;font-weight:700}
+.badge.on{display:inline-block}
+.stat{font-size:12px;color:var(--mut);margin:4px 0 8px}
+.search{position:relative}
+.search input{width:100%;font:inherit;font-size:17px;padding:13px 46px 13px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);outline:none;-webkit-appearance:none}
+.search input:focus{border-color:var(--acc)}
+.clear{position:absolute;right:4px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--mut);font-size:24px;width:42px;height:42px;cursor:pointer;display:none}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 13px;border-radius:99px;font:inherit;font-size:14px;cursor:pointer}
+.chip.sm{font-size:13px;padding:5px 11px}
+.chip.on{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.bar{display:flex;justify-content:space-between;align-items:center;color:var(--mut);font-size:13px;padding:8px 2px 10px}
+.bar select{font:inherit;font-size:13px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;cursor:pointer}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.name{font-weight:600}
+.meta{color:var(--mut);font-size:13px;margin-top:2px}
+.store{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--acc);margin-right:4px}
+.price{text-align:right;white-space:nowrap}
+.price b{font-size:22px;font-variant-numeric:tabular-nums}
+.price span{display:block;color:var(--mut);font-size:13px}
+.delta{font-size:12px;font-weight:600}
+.up,.price span.up{color:var(--up)}.down,.price span.down{color:var(--down)}
+.warn{font-size:12px;color:var(--warn);font-weight:600;margin-top:2px}
+.hint{font-size:12px;color:var(--down);font-weight:600;margin-top:4px}
+.more{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:14px;cursor:default}
+.card.open .more{display:block}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:2px 0}
+.kv span:first-child{color:var(--mut)}
+.chart{width:100%;height:auto;margin-top:10px;display:block}
+.chart .ln{stroke:var(--acc);fill:none;stroke-width:2;stroke-linejoin:round}
+.chart .dot{fill:var(--acc)}
+.chart .dot.pend{fill:var(--card);stroke:var(--acc);stroke-width:2}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .ax{fill:var(--mut);font-size:10px}
+.chk{margin-top:12px}
+.chk label{display:block;color:var(--mut);font-size:13px;margin-bottom:4px}
+.add{display:flex;gap:6px;flex-wrap:wrap}
+.add input{font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);min-width:0}
+.add .pin{flex:1 1 90px}
+.add .pdt{flex:1 1 150px}
+.verdict{margin-top:8px;font-weight:600;min-height:1.2em}
+.empty{text-align:center;color:var(--mut);padding:40px 0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;max-width:88vw;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20;text-align:center}
+.toast.on{opacity:1}
+dialog{border:0;border-radius:16px;padding:18px;width:min(92vw,420px);background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{font-size:17px;margin:0 0 12px}
+dialog label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+dialog input,dialog select{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+dialog .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+dialog .help{font-size:12px;color:var(--mut);margin-top:6px}
+dialog .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="top">
+      <h1>Grocery Index</h1>
+      <div class="acts">
+        <button class="btn pri" id="up" type="button">Upload<span class="badge" id="badge"></span></button>
+        <button class="btn" id="newbtn" type="button">+ Item</button>
+        <button class="btn" id="gear" type="button" aria-label="Settings">&#9881;&#xFE0E;</button>
+      </div>
+    </div>
+    <div class="stat" id="status"></div>
+    <div class="search">
+      <input id="q" type="search" placeholder="Search items, e.g. mince, milk, onion" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Search items">
+      <button class="clear" id="clr" type="button" aria-label="Clear search">&times;</button>
+    </div>
+    <div class="chips" id="stores"></div>
+    <div class="chips" id="cats"></div>
+  </header>
+  <div class="bar">
+    <span id="count"></span>
+    <label>Sort <select id="sort">
+      <option value="az">A to Z</option>
+      <option value="cat">Category</option>
+      <option value="up">Last paid: biggest rise</option>
+      <option value="down">Last paid: biggest drop</option>
+    </select></label>
+  </div>
+  <main id="list"></main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<dialog id="setdlg">
+  <form method="dialog" id="setf">
+    <h2>Settings</h2>
+    <label for="s-key">Passcode</label>
+    <input id="s-key" type="password" autocomplete="off" placeholder="The passcode set in the sheet script">
+    <label for="s-who">Your name (added to prices you log)</label>
+    <input id="s-who" type="text" autocomplete="off" placeholder="e.g. Ben">
+    <div id="s-api-wrap">
+      <label for="s-api">Sheet address</label>
+      <input id="s-api" type="url" autocomplete="off" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <div class="btns"><button class="btn" value="cancel" type="submit">Cancel</button><button class="btn pri" id="s-save" type="button">Save</button></div>
+  </form>
+</dialog>
+
+<dialog id="newdlg">
+  <form id="nf" method="dialog">
+    <h2>New item</h2>
+    <label for="n-store">Store</label>
+    <input id="n-store" name="store" list="dl-store" autocomplete="off" required>
+    <datalist id="dl-store"></datalist>
+    <label for="n-item">Item</label>
+    <input id="n-item" name="item" autocomplete="off" required>
+    <div class="two">
+      <div><label for="n-cat">Category</label><input id="n-cat" name="category" list="dl-cat" autocomplete="off"><datalist id="dl-cat"></datalist></div>
+      <div><label for="n-pack">Pack size</label><input id="n-pack" name="pack" autocomplete="off" placeholder="500g"></div>
+    </div>
+    <div class="two">
+      <div><label for="n-unit">Compare by</label>
+        <select id="n-unit" name="unit">
+          <option value="kg">per kg</option><option value="L">per L</option><option value="100g">per 100g</option><option value="ea" selected>each</option>
+          <option value="egg">per egg</option><option value="roll">per roll</option><option value="can">per can</option><option value="tablet">per tablet</option>
+          <option value="capsule">per capsule</option><option value="sachet">per sachet</option><option value="bag">per bag</option><option value="box">per box</option>
+        </select></div>
+      <div><label for="n-qty">Units in pack</label><input id="n-qty" name="qty" type="number" inputmode="decimal" step="any" min="0" value="1"></div>
+    </div>
+    <div class="help">A 500g pack compared per kg has 0.5 units. A 12 pack of eggs compared per egg has 12.</div>
+    <div class="two">
+      <div><label for="n-price">Pack price ($)</label><input id="n-price" name="price" type="number" inputmode="decimal" step="0.01" min="0" required></div>
+      <div><label for="n-date">Date</label><input id="n-date" name="date" type="date"></div>
+    </div>
+    <div class="btns"><button class="btn" value="cancel" type="submit" formnovalidate>Cancel</button><button class="btn pri" type="submit" id="n-save">Save item</button></div>
+  </form>
+</dialog>
+
+<script>
+// ---- CONFIG ----
+// API_URL is the web app address from Apps Script (ends in /exec). It is not secret on its own:
+// every request also needs the passcode, which is never stored in this file.
+const CONFIG = { API_URL: "https://script.google.com/macros/s/AKfycbw7vaWS1uzAU5UuTkygV39bK5X0kR8EvgM-Hmnl7T6Upnu-yX2HIgw4aeLaNMmhP-uR3w/exec" };
+const SEED = /*SEED_JSON*/null; // demo build only
+
+// ---- helpers ----
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+};
+const pad = n => String(n).padStart(2, "0");
+const today = () => { const d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
+const money = n => "$" + n.toFixed(2);
+const unitLabel = u => !u ? "unit missing" : u === "ea" ? "each" : "per " + u;
+const uid = () => "g" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const fmtDay = iso => new Date(iso).toLocaleDateString("en-AU", { day: "numeric", month: "short" });
+const fmtD = s => new Date(s + "T00:00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "2-digit" });
+const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
+const key = (s, i) => s + "|" + i;
+
+// ---- state ----
+let ITEMS = [], LOG = [], META = "";
+let PENDING = LS.get("gi2_pending", []);
+let SET = LS.get("gi2_set", {});
+let STAT = new Map(), BYNK = new Map(), view = [];
+let store = "All", cat = "All", sort = "az", q = "", busy = false;
+const open = new Set();
+const api = () => SET.api || CONFIG.API_URL || "";
+const configured = () => !!api() && !!SET.key;
+
+let toastTimer;
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("on"), 3400);
+}
+
+// ---- data ----
+function loadLocal() {
+  const c = LS.get("gi2_cache", null);
+  if (c && c.items) { ITEMS = c.items; LOG = c.log; META = "Updated " + fmtDay(c.at); }
+  else if (SEED) { ITEMS = SEED.items; LOG = SEED.log; META = "Demo data"; }
+  else { ITEMS = []; LOG = []; META = "No data yet"; }
+}
+
+function build() {
+  const items = new Map();
+  ITEMS.forEach(i => items.set(key(i.store, i.item), { store: i.store, category: i.category || "Other", item: i.item, pack: i.pack || "",
+    unit: i.unit || "", qty: Number(i.qty) || 0, note: i.note || "", check: i.check, pts: [] }));
+  PENDING.forEach(p => {
+    if (!items.has(key(p.store, p.item)) && p.newItem)
+      items.set(key(p.store, p.item), { store: p.store, category: p.newItem.category || "Other", item: p.item, pack: p.newItem.pack || "",
+        unit: p.newItem.unit || "", qty: Number(p.newItem.qty) || 0, note: "", check: "", pts: [] });
+  });
+  const add = (s, it, date, price, pending) => {
+    const e = items.get(key(s, it)); if (!e) return;
+    const t = new Date(date + "T00:00:00").getTime(); if (isNaN(t)) return;
+    e.pts.push({ d: date, t, p: Number(price), pending });
+  };
+  LOG.forEach(l => add(l.store, l.item, l.date, l.price, false));
+  PENDING.forEach(p => add(p.store, p.item, p.date, p.price, true));
+  BYNK = new Map();
+  items.forEach(e => {
+    e.pts.sort((a, b) => a.t - b.t);
+    const n = e.pts.length;
+    if (n) {
+      const ps = e.pts.map(x => x.p);
+      e.avg = ps.reduce((a, b) => a + b, 0) / n; e.last = e.pts[n - 1]; e.min = Math.min(...ps); e.max = Math.max(...ps);
+    }
+    e.up = n && e.qty > 0 && e.unit ? e.avg / e.qty : null;
+    e.delta = n > 1 ? (e.last.p - e.avg) / e.avg : 0;
+    e.flag = e.check === true || String(e.check).toLowerCase() === "true" || String(e.check) === "1";
+    e.nk = norm(e.item);
+    if (!BYNK.has(e.nk)) BYNK.set(e.nk, []);
+    BYNK.get(e.nk).push(e);
+  });
+  STAT = items;
+}
+
+function cheaper(e) {
+  if (e.up == null) return null;
+  let best = null;
+  (BYNK.get(e.nk) || []).forEach(o => {
+    if (o.store === e.store || o.up == null || o.unit !== e.unit) return;
+    if (o.up < e.up * 0.97 && (!best || o.up < best.up)) best = o;
+  });
+  return best;
+}
+
+// ---- view ----
+function chips() {
+  const all = [...STAT.values()];
+  const stores = ["All", ...new Set(all.map(e => e.store))];
+  const cats = ["All", ...new Set(all.map(e => e.category))];
+  $("#stores").innerHTML = stores.map(s => `<button class="chip${s === store ? " on" : ""}" data-s="${esc(s)}" type="button">${esc(s === "All" ? "All stores" : s)}</button>`).join("");
+  $("#cats").innerHTML = cats.map(c => `<button class="chip sm${c === cat ? " on" : ""}" data-c="${esc(c)}" type="button">${esc(c === "All" ? "All categories" : c)}</button>`).join("");
+}
+
+function apply() {
+  const words = q.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  $("#clr").style.display = q ? "block" : "none";
+  view = [...STAT.values()].filter(e => (store === "All" || e.store === store) && (cat === "All" || e.category === cat) &&
+    words.every(w => (e.item + " " + e.category + " " + e.store).toLowerCase().includes(w)));
+  const by = {
+    az: (a, b) => a.item.localeCompare(b.item) || a.store.localeCompare(b.store),
+    cat: (a, b) => a.category.localeCompare(b.category) || a.item.localeCompare(b.item),
+    up: (a, b) => b.delta - a.delta,
+    down: (a, b) => a.delta - b.delta
+  };
+  view.sort(by[sort]);
+  render();
+}
+
+function chart(pts) {
+  if (pts.length < 2) return `<div class="meta" style="margin-top:8px">Log a second price to see the history chart.</div>`;
+  const W = 300, H = 96, L = 42, R = 8, T = 8, B = 20;
+  const ts = pts.map(p => p.t), ps = pts.map(p => p.p);
+  const t0 = Math.min(...ts), t1 = Math.max(...ts);
+  const rawHi = Math.max(...ps), rawLo = Math.min(...ps);
+  let hi = rawHi, lo = rawLo;
+  if (hi === lo) { const d = hi * 0.1 || 0.5; hi += d; lo -= d; } else { const pd = (hi - lo) * 0.08; hi += pd; lo -= pd; }
+  const X = t => L + (t1 === t0 ? 0.5 : (t - t0) / (t1 - t0)) * (W - L - R);
+  const Y = p => T + (1 - (p - lo) / (hi - lo)) * (H - T - B);
+  const line = pts.map((p, i) => (i ? "L" : "M") + X(p.t).toFixed(1) + " " + Y(p.p).toFixed(1)).join(" ");
+  const dots = pts.map(p => `<circle class="dot${p.pending ? " pend" : ""}" cx="${X(p.t).toFixed(1)}" cy="${Y(p.p).toFixed(1)}" r="3"></circle>`).join("");
+  const mo = t => new Date(t).toLocaleDateString("en-AU", { month: "short", year: "2-digit" });
+  const labels = `<text class="ax" x="${L - 5}" y="${(Y(rawHi) + 3).toFixed(1)}" text-anchor="end">${money(rawHi)}</text>` +
+    (rawHi !== rawLo ? `<text class="ax" x="${L - 5}" y="${(Y(rawLo) + 3).toFixed(1)}" text-anchor="end">${money(rawLo)}</text>` : "");
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Price history">
+    <line class="grid" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"></line>
+    <path class="ln" d="${line}"></path>${dots}${labels}
+    <text class="ax" x="${L}" y="${H - 6}">${mo(t0)}</text><text class="ax" x="${W - R}" y="${H - 6}" text-anchor="end">${mo(t1)}</text></svg>`;
+}
+
+function moreHtml(e) {
+  const n = e.pts.length;
+  const kv = (a, b) => `<div class="kv"><span>${a}</span><span>${b}</span></div>`;
+  let h = "";
+  if (n) {
+    h += kv("Average pack price", money(e.avg));
+    h += kv("Last paid", money(e.last.p) + " on " + fmtD(e.last.d) + (e.last.pending ? " (not uploaded)" : ""));
+    if (e.up != null) h += kv("Last paid " + unitLabel(e.unit), money(e.last.p / e.qty));
+    h += kv("Lowest / highest", money(e.min) + " / " + money(e.max));
+    h += kv("Prices logged", n);
+  } else h += `<div class="meta">No prices logged yet.</div>`;
+  if (e.note) h += `<div class="meta" style="margin-top:6px">${esc(e.note)}</div>`;
+  h += chart(e.pts);
+  h += `<div class="chk"><label>Shelf price for this pack ($)</label>
+    <div class="add"><input class="pin" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" aria-label="Shelf price">
+    <input class="pdt" type="date" value="${today()}" aria-label="Date"><button class="btn pri save" type="button">Save price</button></div>
+    <div class="verdict"></div></div>`;
+  return h;
+}
+
+function render() {
+  $("#count").textContent = view.length + (view.length === 1 ? " item" : " items");
+  if (!view.length) { $("#list").innerHTML = `<div class="empty">No match. Try fewer letters.</div>`; return; }
+  $("#list").innerHTML = view.map(d => {
+    const k = key(d.store, d.item), isOpen = open.has(k);
+    const pc = Math.round(d.delta * 100);
+    const badge = Math.abs(pc) >= 1 ? `<span class="delta ${pc > 0 ? "up" : "down"}">${pc > 0 ? "&#9650;" : "&#9660;"} ${Math.abs(pc)}% last vs avg</span>` : "";
+    const warn = d.flag ? `<div class="warn">&#9888; check this row in the sheet</div>` : "";
+    const ch = cheaper(d);
+    const hint = ch ? `<div class="hint">Cheaper at ${esc(ch.store)}: ${money(ch.up)} ${esc(unitLabel(ch.unit))}</div>` : "";
+    return `<article class="card${isOpen ? " open" : ""}" data-k="${esc(k)}">
+      <div class="row">
+        <div><div class="name">${esc(d.item)}</div>
+          <div class="meta"><span class="store">${esc(d.store)}</span>${esc(d.category)}${d.pack ? " &middot; " + esc(d.pack) : ""}</div>${warn}${hint}</div>
+        <div class="price"><b>${d.up != null ? money(d.up) : "&mdash;"}</b><span>${esc(unitLabel(d.unit))}</span>${badge}</div>
+      </div>
+      <div class="more">${isOpen ? moreHtml(d) : ""}</div></article>`;
+  }).join("");
+}
+
+function updateTop() {
+  const n = PENDING.length;
+  const b = $("#badge"); b.textContent = n; b.classList.toggle("on", n > 0);
+  $("#up").disabled = busy;
+  const conn = !api() ? (SEED ? "demo" : "not connected") : (navigator.onLine ? "online" : "offline");
+  $("#status").textContent = META + " · " + conn + (n ? " · " + n + " waiting to upload" : "");
+}
+
+function recalc() { build(); chips(); apply(); updateTop(); }
+
+// ---- adding prices ----
+function addPending(p, newItem) {
+  PENDING.push(Object.assign({ id: uid(), who: SET.who || "" }, p, newItem ? { newItem } : {}));
+  const ok = LS.set("gi2_pending", PENDING);
+  recalc();
+  toast(ok ? "Saved on this phone (" + PENDING.length + " waiting to upload)" : "Could not save on this phone. Storage may be full or blocked.");
+}
+
+function savePrice(card) {
+  const e = STAT.get(card.dataset.k); if (!e) return;
+  const v = parseFloat(card.querySelector(".pin").value);
+  const date = card.querySelector(".pdt").value || today();
+  if (isNaN(v) || v <= 0) { toast("Type the shelf price first"); return; }
+  addPending({ store: e.store, item: e.item, price: Math.round(v * 100) / 100, date });
+}
+
+// ---- sync ----
+async function call(body) {
+  const r = await fetch(api(), { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(Object.assign({ key: SET.key }, body)), redirect: "follow" });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || "The sheet refused the request");
+  return j;
+}
+function applyData(j) {
+  ITEMS = j.items; LOG = j.log; META = "Updated " + fmtDay(j.at);
+  LS.set("gi2_cache", { items: j.items, log: j.log, at: j.at });
+}
+async function refresh() {
+  try { applyData(await call({ action: "read" })); recalc(); }
+  catch (e) { META = "Could not refresh"; updateTop(); }
+}
+async function sync() {
+  if (busy) return;
+  if (!api()) { toast(SEED ? "Demo mode: no sheet connected" : "Add the sheet address in Settings"); return; }
+  if (!SET.key) { openSettings(); return; }
+  if (!navigator.onLine) { toast("No signal. Prices are saved here and will upload later."); return; }
+  busy = true; updateTop();
+  try {
+    const sent = PENDING.slice();
+    const body = sent.length
+      ? { action: "add",
+          entries: sent.map(p => ({ id: p.id, date: p.date, store: p.store, item: p.item, price: p.price, who: p.who })),
+          items: sent.filter(p => p.newItem).map(p => Object.assign({ store: p.store, item: p.item }, p.newItem)) }
+      : { action: "read" };
+    const j = await call(body);
+    PENDING = PENDING.filter(p => !sent.some(s => s.id === p.id)); LS.set("gi2_pending", PENDING);
+    applyData(j);
+    toast(sent.length ? "Uploaded " + sent.length + (sent.length === 1 ? " price" : " prices") : "Up to date");
+  } catch (e) {
+    toast("Upload failed: " + e.message + ". Prices are still saved here.");
+  }
+  busy = false; recalc();
+}
+
+// ---- dialogs ----
+function openSettings() {
+  $("#s-key").value = SET.key || ""; $("#s-who").value = SET.who || ""; $("#s-api").value = SET.api || "";
+  $("#s-api-wrap").style.display = CONFIG.API_URL ? "none" : "block";
+  $("#setdlg").showModal();
+}
+function saveSettings() {
+  SET = { key: $("#s-key").value.trim(), who: $("#s-who").value.trim(), api: $("#s-api").value.trim() };
+  LS.set("gi2_set", SET); $("#setdlg").close(); updateTop();
+  if (configured() && navigator.onLine) refresh();
+}
+function openNew() {
+  const all = [...STAT.values()];
+  $("#dl-store").innerHTML = [...new Set(all.map(e => e.store))].map(s => `<option value="${esc(s)}">`).join("");
+  $("#dl-cat").innerHTML = [...new Set(all.map(e => e.category))].map(s => `<option value="${esc(s)}">`).join("");
+  $("#n-date").value = today();
+  if (store !== "All") $("#n-store").value = store;
+  $("#newdlg").showModal();
+}
+function submitNew(ev) {
+  if (ev.submitter && ev.submitter.value === "cancel") return;
+  ev.preventDefault();
+  const f = new FormData($("#nf"));
+  const s = String(f.get("store") || "").trim(), it = String(f.get("item") || "").trim();
+  const pr = parseFloat(f.get("price")), qty = parseFloat(f.get("qty"));
+  if (!s || !it || isNaN(pr) || pr <= 0) { toast("Store, item and price are needed"); return; }
+  if (STAT.has(key(s, it))) { toast("That item already exists for " + s + ". Search for it and save a price."); return; }
+  addPending({ store: s, item: it, price: Math.round(pr * 100) / 100, date: String(f.get("date") || today()) },
+    { category: String(f.get("category") || "").trim() || "Other", pack: String(f.get("pack") || "").trim(), unit: String(f.get("unit") || "ea"), qty: isNaN(qty) ? "" : qty });
+  $("#nf").reset(); $("#newdlg").close();
+  q = it; $("#q").value = it; apply();
+}
+
+// ---- events ----
+$("#q").addEventListener("input", e => { q = e.target.value; apply(); });
+$("#clr").addEventListener("click", () => { q = ""; $("#q").value = ""; apply(); $("#q").focus(); });
+$("#sort").addEventListener("change", e => { sort = e.target.value; apply(); });
+$("#stores").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; store = b.dataset.s; chips(); apply(); });
+$("#cats").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; cat = b.dataset.c; chips(); apply(); });
+$("#list").addEventListener("click", e => {
+  const c = e.target.closest(".card"); if (!c) return;
+  if (e.target.closest(".save")) { savePrice(c); return; }
+  if (e.target.closest(".more")) return;
+  const k = c.dataset.k;
+  if (open.has(k)) { open.delete(k); c.classList.remove("open"); c.querySelector(".more").innerHTML = ""; }
+  else { open.add(k); c.classList.add("open"); c.querySelector(".more").innerHTML = moreHtml(STAT.get(k)); }
+});
+$("#list").addEventListener("input", e => {
+  if (!e.target.classList.contains("pin")) return;
+  const c = e.target.closest(".card"), d = STAT.get(c.dataset.k), out = c.querySelector(".verdict"), v = parseFloat(e.target.value);
+  if (isNaN(v) || !d || !d.pts.length) { out.textContent = ""; out.className = "verdict"; return; }
+  const p = (v - d.avg) / d.avg, pc = Math.round(Math.abs(p) * 100);
+  if (pc < 2) { out.textContent = "About your usual price (" + money(d.avg) + ")"; out.className = "verdict"; }
+  else { out.textContent = money(v) + " is " + pc + "% " + (p > 0 ? "above" : "below") + " your average of " + money(d.avg); out.className = "verdict " + (p > 0 ? "up" : "down"); }
+});
+$("#up").addEventListener("click", sync);
+$("#gear").addEventListener("click", openSettings);
+$("#s-save").addEventListener("click", saveSettings);
+$("#newbtn").addEventListener("click", openNew);
+$("#nf").addEventListener("submit", submitNew);
+window.addEventListener("online", () => { updateTop(); });
+window.addEventListener("offline", updateTop);
+
+// ---- start ----
+loadLocal(); recalc();
+if (configured() && navigator.onLine) refresh();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
+
+{% endraw %}
