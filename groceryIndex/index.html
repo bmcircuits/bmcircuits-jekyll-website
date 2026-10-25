@@ -24,11 +24,12 @@ header{position:sticky;top:0;background:var(--bg);padding:calc(10px + env(safe-a
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
 h1{font-size:18px;margin:0}
 .acts{display:flex;gap:6px}
+.acts .btn{padding:7px 10px}
 .btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:7px 11px;cursor:pointer;position:relative}
 .btn.pri{background:var(--acc);border-color:var(--acc);color:var(--onacc);font-weight:600}
 .btn[disabled]{opacity:.6}
-.badge{display:none;margin-left:6px;background:var(--onacc);color:var(--acc);border-radius:99px;font-size:12px;padding:0 7px;font-weight:700}
-.badge.on{display:inline-block}
+.badge{display:none;position:absolute;top:-8px;right:-6px;min-width:20px;height:20px;line-height:20px;text-align:center;padding:0 5px;background:var(--ink);color:var(--bg);border-radius:99px;font-size:12px;font-weight:700}
+.badge.on{display:block}
 .stat{font-size:12px;color:var(--mut);margin:4px 0 8px}
 .search{position:relative}
 .search input{width:100%;font:inherit;font-size:17px;padding:13px 46px 13px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);outline:none;-webkit-appearance:none}
@@ -81,15 +82,52 @@ dialog input,dialog select{width:100%;font:inherit;font-size:16px;padding:10px 1
 dialog .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 dialog .help{font-size:12px;color:var(--mut);margin-top:6px}
 dialog .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+[hidden]{display:none!important}
+.top{flex-wrap:wrap}
+.btn.ghost{border-color:var(--acc);color:var(--acc);font-weight:600}
+#rdlg{padding:0;width:min(96vw,560px)}
+#rdlg[open]{display:flex;flex-direction:column;max-height:92vh}
+@media (max-width:600px){#rdlg.full{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0}#rdlg.full[open]{max-height:100dvh}}
+#r-scroll{overflow:auto;flex:1 1 auto;min-height:0;-webkit-overflow-scrolling:touch}
+.rhead{padding:16px 16px 8px}
+#rdlg.full .rhead{padding-top:calc(16px + env(safe-area-inset-top))}
+.rbusy{padding:20px 16px 16px}
+.prog{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:14px 0 8px}
+.prog i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+.rcheck{font-size:13px;font-weight:600;margin:10px 0 2px;padding:8px 10px;border-radius:10px;background:var(--bg)}
+.rcheck.ok{color:var(--down)}.rcheck.bad{color:var(--warn)}
+#r-rows{padding:0 16px}
+.rfoot{padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--line)}
+.rrow{padding:10px 0;border-bottom:1px solid var(--line)}
+.rline{display:flex;gap:8px;align-items:center}
+#rdlg input[type=checkbox]{width:22px;height:22px;padding:0;flex:none;accent-color:var(--acc)}
+#rdlg .ri{flex:1 1 auto;min-width:0;padding:8px 10px}
+#rdlg .rp{width:5.4em;flex:none;text-align:right;padding:8px}
+.rsub{font-size:12px;color:var(--mut);margin:3px 0 0 30px;display:flex;gap:8px;flex-wrap:wrap}
+.rtag{font-weight:700;color:var(--acc)}
+.rnote{font-size:12px;color:var(--warn);font-weight:600;margin:3px 0 0 30px}
+.rnew{font-size:12px;color:var(--mut);margin:4px 0 0 30px;display:flex;gap:6px;align-items:center}
+.rdet{font:inherit;font-size:13px;color:var(--acc);background:none;border:0;padding:6px 0 2px 30px;cursor:pointer;font-weight:600}
+.rdetails{margin:4px 0 2px 30px;padding:6px 10px 10px;background:var(--bg);border-radius:10px}
+#rdlg .rdetails label{font-size:12px;margin:8px 0 3px}
+#rdlg .rdetails input,#rdlg .rdetails select{padding:8px 10px;font-size:15px}
+#rdlg .rdetails .two{gap:8px}
+.rcalc{font-size:12px;color:var(--mut);margin-top:8px}
+.rcalc b{color:var(--ink)}
+.rwarnb{font-size:12px;color:var(--warn);font-weight:600;margin-top:6px}
+.slink{display:flex;gap:6px}
+.slink input{flex:1;min-width:0;font-size:13px}
+dialog .sec{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div class="top">
-      <h1>Grocery Index</h1>
+      <h1>Groceries</h1>
       <div class="acts">
         <button class="btn pri" id="up" type="button">Upload<span class="badge" id="badge"></span></button>
+        <button class="btn ghost" id="scan" type="button">Scan</button>
         <button class="btn" id="newbtn" type="button">+ Item</button>
         <button class="btn" id="gear" type="button" aria-label="Settings">&#9881;&#xFE0E;</button>
       </div>
@@ -106,6 +144,7 @@ dialog .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
     <span id="count"></span>
     <label>Sort <select id="sort">
       <option value="az">A to Z</option>
+      <option value="pop">Most logged</option>
       <option value="cat">Category</option>
       <option value="up">Last paid: biggest rise</option>
       <option value="down">Last paid: biggest drop</option>
@@ -114,6 +153,31 @@ dialog .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
   <main id="list"></main>
 </div>
 <div class="toast" id="toast" role="status"></div>
+<input id="rfile" type="file" accept="image/*" hidden>
+
+<dialog id="rdlg">
+  <div class="rbusy" id="r-busy">
+    <h2 id="r-title">Reading receipt</h2>
+    <div class="prog"><i id="r-prog"></i></div>
+    <div class="help" id="r-msg"></div>
+    <div class="btns"><button class="btn" id="r-cancel" type="button">Cancel</button></div>
+  </div>
+  <div id="r-review" hidden style="display:flex;flex-direction:column;min-height:0;flex:1 1 auto">
+    <div id="r-scroll">
+    <div class="rhead">
+      <h2>Receipt</h2>
+      <div class="two">
+        <div><label for="r-store">Store</label><input id="r-store" list="dl-rstore" autocomplete="off"><datalist id="dl-rstore"></datalist></div>
+        <div><label for="r-date">Date</label><input id="r-date" type="date"></div>
+      </div>
+      <div class="rcheck" id="r-check"></div>
+      <datalist id="dl-ritems"></datalist>
+    </div>
+    <div id="r-rows"></div>
+    </div>
+    <div class="rfoot"><button class="btn" id="r-close" type="button">Cancel</button><button class="btn pri" id="r-add" type="button">Add prices</button></div>
+  </div>
+</dialog>
 
 <dialog id="setdlg">
   <form method="dialog" id="setf">
@@ -126,7 +190,12 @@ dialog .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
       <label for="s-api">Sheet address</label>
       <input id="s-api" type="url" autocomplete="off" placeholder="https://script.google.com/macros/s/.../exec">
     </div>
-    <div class="btns"><button class="btn" value="cancel" type="submit">Cancel</button><button class="btn pri" id="s-save" type="button">Save</button></div>
+    <div class="sec" id="s-share">
+      <label for="s-link">Sign-in link for family</label>
+      <div class="slink"><input id="s-link" readonly aria-label="Sign-in link"><button class="btn" id="s-copy" type="button">Copy</button></div>
+      <div class="help">Opens this page already signed in, so nobody has to type the passcode. It contains the passcode: send it only to family, and open it once on each phone.</div>
+    </div>
+    <div class="btns"><button class="btn" id="s-out" type="button" style="margin-right:auto">Sign out</button><button class="btn" value="cancel" type="submit">Cancel</button><button class="btn pri" id="s-save" type="button">Save</button></div>
   </form>
 </dialog>
 
@@ -160,19 +229,707 @@ dialog .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
   </form>
 </dialog>
 
+<script src="ocr/tesseract-shim.js"></script>
 <script>
 // ---- CONFIG ----
 // API_URL is the web app address from Apps Script (ends in /exec). It is not secret on its own:
 // every request also needs the passcode, which is never stored in this file.
 const CONFIG = { API_URL: "https://script.google.com/macros/s/AKfycbw7vaWS1uzAU5UuTkygV39bK5X0kR8EvgM-Hmnl7T6Upnu-yX2HIgw4aeLaNMmhP-uR3w/exec" };
 const SEED = /*SEED_JSON*/null; // demo build only
+// The receipt reader is stored beside this page in the ocr folder. If that folder is missing, it is fetched from this address instead.
+const TESS_URL = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
+const POP_MIN = 5; // "Popular" means this many prices logged or more
+
+// Receipt reading: turns the text of a till receipt into rows that can be matched to the item list.
+// Written for ALDI Australia receipts. Pure functions, no page access, so it can be tested on its own.
+const ReceiptLib = (function () {
+  const ABBR = {
+    chk: "chicken", ckn: "chicken", yog: "yogurt", yoghurt: "yogurt", grk: "greek", sty: "style", nat: "natural",
+    wtr: "water", frz: "frozen", crmd: "crumbed", btd: "battered", pot: "potato", chs: "cheese", mex: "mexican",
+    veg: "vegetable", org: "organic", lge: "large", sml: "small", whl: "whole", bf: "beef", tom: "tomato",
+    strwb: "strawberry", swt: "sweet", brn: "brown", wht: "white", blk: "black", grn: "green", choc: "chocolate",
+    mlk: "milk", parm: "parmesan", cho: "chocolate", bw: "body wash"
+  };
+  const DROP = new Set(["cw", "ea", "each", "per", "kg", "g", "ml", "l", "ltr", "pk", "pack", "bulk", "cage",
+    "cont", "container", "net", "of", "and", "the", "ww", "wh", "wn", "tpd", "pp"]);
+  const CATS = [
+    ["Health", /fish oil|vitamin|magnesium|turmeric|probiotic|supplement|collagen/],
+    ["Household", /soap|clean|laundry|soaker|bleach|tissue|toilet|dishwash|detergent|sponge|foil|bin bag|tidy bag|rexona|deodorant|body wash|toothpaste|shampoo|conditioner/],
+    ["Frozen", /frozen|ice cream/],
+    ["Meat", /chicken|beef|lamb|pork|bacon|sausage|mince|steak|chop|salmon|fish|ham|turkey|prawn|dumpling|wings|salami|peperoni|pepperoni|burger/],
+    ["Dairy & eggs", /milk|cheese|yogurt|butter|cream|egg|custard|feta|ricotta|mozz?arella|babybel|stracciatella|burrata|tofu/],
+    ["Veg", /onion|potato|carrot|broccoli|broccolini|lettuce|cucumber|tomato|corn|capsicum|zucchini|pumpkin|spinach|cabbage|choy|garlic|avocado|mushroom|salad|celery/],
+    ["Fruit", /apple|banana|orange|lemon|lime|grape|mango|pear|kiwi|berry|berries|melon|pineapple|peach/],
+    ["Coffee & tea", /coffee|tea|sachet|milo/],
+    ["Snacks & drinks", /chip|chocolate|biscuit|cookie|gum|lolly|lollies|piglet|pigtail|nut|water|soda|tonic|juice|cola|pepsi|sunkist|ginger beer|drink|snack|rice cake/],
+    ["Oils, sauces & spreads", /oil|sauce|vinegar|mayo|jam|spread|dressing|honey/],
+    ["Tinned & jars", /tinned|canned|olive|tuna|beans|jar|soup/],
+    ["Pantry", /rice|pasta|flour|sugar|salt|oat|noodle|couscous|bread|bun|loaf|cereal|spice|seasoning|cinnamon|herb|pepper|wrap/]
+  ];
+
+  const round2 = n => Math.round(n * 100) / 100;
+  const num = s => { const n = parseFloat(String(s).replace(",", ".").replace(/\s/g, "")); return isNaN(n) ? null : n; };
+
+  // Fixes the slips the reader makes most on small receipt print.
+  function fixOcr(s) {
+    return String(s || "")
+      .replace(/(\d)\s+\.\s+(\d)/g, "$1.$2")
+      .replace(/\b[Iil]\s?kg\b/g, "1kg")
+      .replace(/([A-Za-z])[Iil]kg\b/g, "$1 1kg")
+      .replace(/(\d)[iIl|](g|kg|ml)\b/gi, (m, d, u) => d + "1" + u)
+      .replace(/(\d)\s*[.,]\s*(\d{1,3}\s?(?:l|ltr|kg|g|ml)\b)/gi, "$1.$2")
+      .replace(/(\d)\s*(?:grams?|gm)\b/gi, "$1g");
+  }
+
+  // ---- pack sizes ----
+  // A receipt can name a pack more than one way ("12pk 700g", "30X375ML"), so every reading is kept in alts.
+  function toBase(v, u) {
+    if (u === "kg") return { k: "g", v: v * 1000 };
+    if (u === "g") return { k: "g", v };
+    if (u === "ml") return { k: "ml", v };
+    return { k: "ml", v: v * 1000 };
+  }
+  function parsePack(s) {
+    s = fixOcr(s).toLowerCase();
+    const alts = [];
+    if (/per\s*kg|\/\s*kg/.test(s)) alts.push({ k: "perkg", v: 1 });
+    s = s.replace(/(\d+)\s*x\s*(\d+(?:\.\d+)?)\s*(kg|g|ml|ltr|l)?\b/g, (m, n, size, u) => {
+      n = parseInt(n, 10);
+      if (u) { const b = toBase(parseFloat(size), u); alts.push({ k: b.k, v: b.v * n, n, size: parseFloat(size), u }); alts.push({ k: "n", v: n, size: parseFloat(size), u }); }
+      else alts.push({ k: "n", v: n });
+      return " ";
+    });
+    let m; const re = /(\d+(?:\.\d+)?)\s*(kg|g|ml|ltr|l)\b/g;
+    while ((m = re.exec(s))) alts.push(toBase(parseFloat(m[1]), m[2]));
+    m = s.match(/(\d+)\s*(?:pk|pack)\b/); if (m) alts.push({ k: "n", v: parseInt(m[1], 10) });
+    if (/\b(each|ea|half)\b/.test(s)) alts.push({ k: "ea", v: 1 });
+    if (!alts.length) return null;
+    const pri = ["perkg", "g", "ml", "n", "ea"];
+    const first = alts.slice().sort((a, b) => pri.indexOf(a.k) - pri.indexOf(b.k))[0];
+    return Object.assign({}, first, { alts });
+  }
+  function packCompat(a, b) {
+    if (!a || !b) return true;
+    const A = a.alts || [a], B = b.alts || [b];
+    return A.some(x => B.some(y => x.k === y.k && Math.abs(x.v - y.v) / Math.max(x.v, y.v) <= 0.05));
+  }
+  function stripPack(s) {
+    return fixOcr(s)
+      .replace(/\bp\/p\b/gi, " ").replace(/\b[A-Za-z]\/(?=[A-Za-z])/g, "").replace(/\b\d+\s?s\b/gi, " ").replace(/\b(\d)\s?ply\b/gi, " ")
+      .replace(/(\d+\s*x\s*\d+(?:\.\d+)?\s*(?:kg|g|ml|ltr|l)?\b)/gi, " ")
+      .replace(/(\d+(?:\.\d+)?\s*(?:x\s*)?(?:kg|g|ml|ltr|l|pk|pack)\b)/gi, " ")
+      .replace(/per\s*kg/gi, " ").replace(/\b(ea|each)\b/gi, " ");
+  }
+  function splitWords(s) {
+    return s.replace(/\b(Mc|Mac)([A-Z])/g, "$1\u0001$2").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/\u0001/g, "").replace(/([A-Za-z])(\d)/g, "$1 $2").replace(/(\d)([A-Za-z])/g, "$1 $2").replace(/[\/_\-]+/g, " ");
+  }
+  function stem(t) {
+    if (t.length > 4 && t.endsWith("ies")) return t.slice(0, -3) + "y";
+    if (t.length > 4 && t.endsWith("oes")) return t.slice(0, -2);
+    if (t.length > 3 && t.endsWith("s") && !t.endsWith("ss")) return t.slice(0, -1);
+    return t;
+  }
+  function tokens(s) {
+    const out = [];
+    splitWords(stripPack(s)).toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(Boolean).forEach(w => {
+      w = stem(ABBR[w] || w);
+      if (w.length > 1 && !DROP.has(w) && !/^\d+$/.test(w)) out.push(w);
+    });
+    return out;
+  }
+  function lev(a, b) {
+    const m = a.length, n = b.length; if (Math.abs(m - n) > 2) return 3;
+    let prev = Array.from({ length: n + 1 }, (_, j) => j);
+    for (let i = 1; i <= m; i++) {
+      const cur = [i];
+      for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = cur;
+    }
+    return prev[n];
+  }
+  function tokScore(x, y) {
+    if (x === y) return 1;
+    const mn = Math.min(x.length, y.length);
+    if (mn >= 4 && (x.startsWith(y) || y.startsWith(x))) return 0.8;
+    if (mn >= 5 && lev(x, y) <= 1) return 0.85;
+    return 0;
+  }
+  function score(rt, it) {
+    if (!rt.length || !it.length) return 0;
+    const best = (x, pool) => pool.reduce((m, y) => Math.max(m, tokScore(x, y)), 0);
+    const covItem = it.reduce((a, x) => a + best(x, rt), 0) / it.length;
+    const covRecv = rt.reduce((a, x) => a + best(x, it), 0) / rt.length;
+    return 0.65 * covItem + 0.35 * covRecv;
+  }
+
+  function pretty(s) {
+    const raw = stripPack(s), caps = !/[a-z]/.test(raw);
+    const words = splitWords(raw).replace(/[^A-Za-z0-9&() ]+/g, " ").split(/\s+/).filter(Boolean)
+      .filter(w => !DROP.has(w.toLowerCase()))
+      .map(w => { const l = w.toLowerCase(); return ABBR[l] || (!caps && w === w.toUpperCase() && w.length <= 4 && !/\d/.test(w) ? w : l); });
+    const t = words.join(" ");
+    return t ? t[0].toUpperCase() + t.slice(1) : "";
+  }
+  function guessCategory(name) {
+    const t = name.toLowerCase();
+    for (const [c, re] of CATS) if (re.test(t)) return c;
+    return "Other";
+  }
+  // What each pack is counted in, following the conventions in the sheet (eggs per egg, drinks per can, and so on).
+  function countUnit(name, n) {
+    const t = name.toLowerCase();
+    if (/\begg/.test(t)) return "egg";
+    if (/sachet/.test(t)) return "sachet";
+    if (/tissue|toilet|paper towel/.test(t)) return "roll";
+    if (/tidy bag|bin bag|garbage/.test(t)) return "bag";
+    if (/capsule/.test(t)) return "capsule";
+    if (/tablet/.test(t)) return "tablet";
+    if (n >= 6 && /pepsi|coke|cola|sunkist|ginger beer|lemonade|solo|soda|fanta|sprite|tonic|beer|cider/.test(t)) return "can";
+    return "ea";
+  }
+  function newItemFor(pk, name, isWeighed) {
+    const category = guessCategory(name);
+    if (isWeighed || (pk && pk.k === "perkg")) return { category, pack: "per kg", unit: "kg", qty: 1 };
+    if (pk && pk.n && pk.size && (pk.k === "g" || pk.k === "ml")) return { category, pack: pk.n + " x " + pk.size + pk.u, unit: pk.k === "g" ? "kg" : "L", qty: +(pk.v / 1000).toFixed(4) };
+    if (pk && pk.k === "g") return { category, pack: pk.v >= 1000 ? +(pk.v / 1000).toFixed(3) + "kg" : pk.v + "g", unit: "kg", qty: +(pk.v / 1000).toFixed(4) };
+    if (pk && pk.k === "ml") return { category, pack: pk.v >= 1000 ? +(pk.v / 1000).toFixed(3) + "L" : pk.v + "ml", unit: "L", qty: +(pk.v / 1000).toFixed(4) };
+    if (pk && pk.k === "n") return { category, pack: pk.v + " pack", unit: countUnit(name, pk.v), qty: pk.v };
+    return { category, pack: "each", unit: "ea", qty: 1 };
+  }
+
+  // ---- reading amounts on a line ----
+  // A price is digits, a point and two decimals. Weights (1.067 kg), sizes (1.25L) and rates (@ $4.90/kg, $2.90 each) are not prices.
+  const PRICE_RE = /(-)?\s?\$?\s?(\d{1,4})\s?[.,]\s?(\d{2})(?!\d)(?!\s?(?:kg|g|ml|l|ltr|pk|x)\b)(\s?-)?/gi;
+  function amounts(s) {
+    const out = []; let m; PRICE_RE.lastIndex = 0;
+    while ((m = PRICE_RE.exec(s))) {
+      const before = s.slice(0, m.index), after = s.slice(m.index + m[0].length);
+      if (/@\s*$/.test(before) || /^\s*\/\s*kg/i.test(after) || /^\s*(each|ea)\b/i.test(after)) continue;
+      const v = parseInt(m[2], 10) + parseInt(m[3], 10) / 100;
+      out.push({ v: round2((m[1] || m[4]) ? -v : v), idx: m.index, end: m.index + m[0].length });
+    }
+    return out;
+  }
+  const letters = s => (String(s).match(/[A-Za-z]/g) || []).length;
+  // The item name on a line. The reader often adds junk beside the receipt, separated by wide gaps, so take the longest wordy piece.
+  function nameBefore(s, idx) {
+    const segs = s.slice(0, idx).split(/\s{3,}|\t/).map(x => x.trim()).filter(x => letters(x) >= 3);
+    if (!segs.length) return "";
+    const best = segs.reduce((a, b) => letters(b) >= letters(a) ? b : a);
+    if (/^\$?\d+[.,]\d{2}\s*(each|ea)\b/i.test(best)) return "";
+    return best.replace(/^[^A-Za-z0-9&(]+/, "").replace(/[\s|\\]+$/, "");
+  }
+  function findDate(s) {
+    const m = String(s).match(/(?:^|[^\d])(\d{1,2})\s?[.\/-]\s?(\d{1,2})\s?[.\/-]\s?(\d{4}|\d{2})(?!\d)/);
+    if (!m) return null;
+    let y = parseInt(m[3], 10); if (y < 100) y += 2000;
+    const d = parseInt(m[1], 10), mo = parseInt(m[2], 10);
+    if (mo < 1 || mo > 12 || d < 1 || d > 31 || y < 2020 || y > 2100) return null;
+    return y + "-" + String(mo).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+  }
+  const PROFILES = [
+    ["aldi", "ALDI", /\baldi\b/i],
+    ["costco", "Costco", /\bcostco\b/i],
+    ["woolworths", "Woolies/Coles", /\bwoolworths\b|\bwoolworth\b|freshfood\s*people|fresh food people/i],
+    ["coles", "Woolies/Coles", /\bcoles\b|\bcole\s*s\b/i]
+  ];
+  function detect(lines) {
+    const head = lines.slice(0, 30).join("\n");
+    for (const [p, store, re] of PROFILES) if (re.test(head)) return { p, store };
+    const all = lines.join("\n");
+    for (const [p, store, re] of PROFILES) if (re.test(all)) return { p, store };
+    // Layout clues when the name was not readable.
+    if (/\bnet\s*@/i.test(all) && /sub\s*total/i.test(all)) return { p: "woolworths", store: "Woolies/Coles" };
+    if (/total\s*for\s*\d+\s*items?/i.test(all)) return { p: "coles", store: "Woolies/Coles" };
+    return { p: "aldi", store: null };
+  }
+
+  const clean = raw => raw.replace(/^[^A-Za-z0-9$-]+/, "");
+
+  // ---- ALDI ----
+  function parseAldi(lines, out) {
+    let cur = null, items = true;
+    for (const raw of lines) {
+      const s = raw.replace(/^[^A-Za-z0-9]+/, "");
+      if (!out.date) { const d = findDate(s); if (d) out.date = d; }
+      if (/^sub\s*total/i.test(s)) {
+        const m = s.replace(/\(.*?\)/g, " ").match(/(\d+[.,]\d{2})/);
+        if (m) out.subtotal = num(m[1]);
+        items = false; cur = null; continue;
+      }
+      if (/^total\s*[\(\{\[]?\s*incl/i.test(s)) {
+        const m = s.replace(/[\(\{\[].*?[\)\}\]]/g, " ").match(/(\d+[.,]\d{2})/);
+        if (m) { if (out.total == null) out.total = num(m[1]); if (out.subtotal == null) out.subtotal = out.total; }
+        items = false; cur = null; continue;
+      }
+      if (!items) {
+        const cm = s.match(/^(\d{1,3})\s+items?\b/i); if (cm) out.count = parseInt(cm[1], 10);
+        continue;
+      }
+      let m = s.match(/^qty\s*(\d+)\s*@?\s*\D{0,2}(\d+[.,]\d{2})/i);
+      if (m && cur) { cur.qty = parseInt(m[1], 10); cur.unitPrice = num(m[2]); continue; }
+      m = s.match(/^(\d+[.,]\d{2,3})\s*kg\s*net\s*@\s*\D{0,3}(\d+[.,]\d{2})/i);
+      if (m && cur) { cur.weight = num(m[1]); cur.rate = num(m[2]); continue; }
+      m = s.match(/^([0-9OoIl]{5,7})\s+(.+)$/);
+      if (m) {
+        const rest = m[2];
+        const a = rest.match(/^(.*?)\s+(\d{1,4}[.,]\d{2})(?:\s+([A-Z]))?(?![\w.])/);
+        let desc = (a ? a[1] : rest).trim();
+        if (!a) { // no readable price: drop trailing junk the reader picked up after the name
+          const w = desc.split(/\s+/);
+          while (w.length > 1 && !/[A-Za-z]{3,}|\d+(\.\d+)?\s?(kg|g|ml|l|pk)\b/i.test(w[w.length - 1])) w.pop();
+          desc = w.join(" ");
+        }
+        cur = { raw: raw, code: m[1], desc: desc, amount: a ? num(a[2]) : null, qty: 1, unitPrice: null, weight: null, rate: null, discount: 0 };
+        out.items.push(cur);
+      }
+    }
+    out.items.forEach(it => { it.weighed = /\sC[WHV]{1,2}$/i.test(it.desc) && it.rate == null; });
+  }
+
+  // Lines shared by Woolworths and Coles: "Qty 2 @ $2.90 each", "2 @ $9.00 EACH" and "1.067 kg NET @ $4.90/kg".
+  const QTY_RE = /^(?:[qa]ty\s*)?(\d+)\s*@?\s*\$?\s*(\d+[.,]\d{2})\s*(?:each|ea\b)/i;
+  const QTY_RE2 = /^[qa]ty\s*(\d+)\s*@?\s*\D{0,2}(\d+[.,]\d{2})/i;
+  const WGT_RE = /(\d*[.,]?\d+)\s*kg\s*net\s*@\s*\$?\s*(\d+[.,]\d{2})/i;
+  function mk(raw, desc, amount) {
+    return { raw, code: "", desc, amount, qty: 1, unitPrice: null, weight: null, rate: null, discount: 0, weighed: false };
+  }
+  function qtyOf(s) {
+    const m = s.match(QTY_RE) || s.match(QTY_RE2);
+    return m ? { qty: parseInt(m[1], 10), unitPrice: num(m[2]) } : null;
+  }
+  function wgtOf(s, amt) {
+    const m = s.match(WGT_RE); if (!m) return null;
+    const rate = num(m[2]); let w = num(m[1]);
+    // The leading "0." can be lost: the price on the line says what the weight must have been.
+    if (amt != null && rate > 0 && Math.abs(w * rate - amt) > 0.03 && Math.abs(amt / rate - w) > 0.002) w = Math.round(amt / rate * 1000) / 1000;
+    return { weight: w, rate };
+  }
+
+  // ---- Woolworths ----
+  function parseWoolworths(lines, out) {
+    let pending = null, cur = null, items = true;
+    for (const raw of lines) {
+      const s = clean(raw), am = amounts(s);
+      if (!out.date) { const d = findDate(s); if (d) out.date = d; }
+      if (items && /sub\s*total|^total\b|merch|term\s*id|mastercard|visa\b|purchase\b/i.test(s)) {
+        items = false;
+        const cm = s.match(/(\d{1,3})\s*sub\s*total/i); if (cm) out.count = parseInt(cm[1], 10);
+      }
+      if (!items) {
+        const cm = s.match(/(\d{1,3})\s*sub\s*total/i); if (cm) out.count = parseInt(cm[1], 10);
+        const a = am.filter(x => x.v > 0).pop();
+        if (a) {
+          if (/sub\s*total/i.test(s) && out.subtotal == null) out.subtotal = a.v;
+          else if (/^total\b/i.test(s) && out.total == null) out.total = a.v;
+          else if (/purchase|^eft\b/i.test(s) && out.card == null) out.card = a.v;
+        }
+        continue;
+      }
+      const neg = am.filter(x => x.v < 0).pop(), pos = am.filter(x => x.v > 0).pop();
+      if (neg) { out.basketDiscount = round2((out.basketDiscount || 0) + -neg.v); pending = null; continue; }
+      const w = wgtOf(s, pos ? pos.v : null);
+      if (w) {
+        const it = mk(raw, pending || (cur && cur.desc) || "", pos ? pos.v : null);
+        Object.assign(it, w, { weighed: true });
+        if (pending) { out.items.push(it); cur = it; pending = null; }
+        continue;
+      }
+      const q = qtyOf(s);
+      if (q) {
+        const it = mk(raw, pending || "", pos ? pos.v : null);
+        it.qty = q.qty; it.unitPrice = q.unitPrice;
+        if (pending) { out.items.push(it); cur = it; pending = null; }
+        continue;
+      }
+      if (pos) {
+        const nm = nameBefore(s, pos.idx);
+        if (nm) { const it = mk(raw, nm, pos.v); out.items.push(it); cur = it; pending = null; }
+        continue;
+      }
+      const t = nameBefore(s + "   x", s.length);
+      if (t && letters(t) >= 4 && !/tax invoice|^pos\b|trans\b|^ph\b/i.test(t)) pending = t;
+    }
+    if (out.subtotal == null) out.subtotal = out.total != null ? out.total : (out.card != null ? out.card : null);
+  }
+
+  // ---- Coles ----
+  function parseColes(lines, out) {
+    let cur = null, items = true;
+    for (const raw of lines) {
+      const s = clean(raw), am = amounts(s);
+      if (!out.date) { const d = findDate(s); if (d) out.date = d; }
+      if (items && /total\s*for\s*\d+\s*items?|^total\b|^eft\b/i.test(s)) {
+        items = false;
+        const cm = s.match(/total\s*for\s*(\d+)\s*items?/i); if (cm) out.count = parseInt(cm[1], 10);
+        const a = am.filter(x => x.v > 0).pop(); if (a && out.subtotal == null) out.subtotal = a.v;
+        continue;
+      }
+      if (!items) {
+        if (out.subtotal == null) { const a = am.filter(x => x.v > 0).pop(); if (a && /^eft\b|total|purchase/i.test(s)) out.subtotal = a.v; }
+        continue;
+      }
+      if (/^description\b/i.test(s)) continue;
+      const q = qtyOf(s);
+      if (q && cur && cur.qty === 1 && !am.some(x => x.v > 0 && s.indexOf("@") < 0)) { cur.qty = q.qty; cur.unitPrice = q.unitPrice; continue; }
+      const neg = am.filter(x => x.v < 0).pop(), pos = am.filter(x => x.v > 0).pop();
+      if (neg) {
+        // "PERCY PIG COLIN 2 FOR $3  -$9.00": the saving covers the last N items bought.
+        const d = -neg.v, nm = s.match(/(\d+)\s*for\s*\$?\s*(\d+(?:[.,]\d{1,2})?)/i), n = nm ? parseInt(nm[1], 10) : 1, offer = nm ? num(nm[2]) : null;
+        let group = []; let units = 0;
+        // The offer price says which items it covered: their normal prices less the saving make the offer price.
+        if (offer != null) {
+          let sum = 0;
+          for (let i = out.items.length - 1; i >= 0 && i >= out.items.length - 4; i--) {
+            sum += out.items[i].amount || 0;
+            if (Math.abs(sum - d - offer) <= 0.02) { group = out.items.slice(i); break; }
+          }
+        }
+        if (!group.length) for (let i = out.items.length - 1; i >= 0 && units < n; i--) { group.unshift(out.items[i]); units += out.items[i].qty; }
+        else if (group.length === 1 && group[0].qty === 1 && n > 1) group[0].qty = n; // the "2 @ $9.00 each" line was not read
+        const base = group.reduce((a, i) => a + (i.amount || 0), 0) || 1;
+        group.forEach(i => { i.discount = round2(i.discount + d * ((i.amount || 0) / base)); i.promo = s.replace(/\s{2,}.*$/, "").trim(); });
+        continue;
+      }
+      if (pos) {
+        const nm = nameBefore(s, pos.idx);
+        if (nm) { const it = mk(raw, nm, pos.v); out.items.push(it); cur = it; }
+      }
+    }
+  }
+
+  // ---- Costco ----
+  // Each item is two lines: the name, then "item number, 1x, unit price, line total". "TPD ..." lines are price drops, shown with a minus.
+  function parseCostco(lines, out) {
+    const run = needMarker => {
+      out.items = []; let started = !needMarker, pending = null, cur = null, pendingTpd = false, items = true;
+      const flush = () => {
+        if (pending && !pendingTpd && letters(pending) >= 5) { const it = mk(pending, pending, null); out.items.push(it); cur = it; }
+        pending = null; pendingTpd = false;
+      };
+      for (const raw of lines) {
+        const s = clean(raw), am = amounts(s);
+        if (!out.date) { const d = findDate(s); if (d) out.date = d; }
+        if (!started) { if (/tax\s*invoice/i.test(s)) started = true; continue; }
+        if (!items) continue;
+        if (/^(sub\s*total|total\b|tax\b|visa\b|mastercard|eft\b|costco\b)/i.test(s) && (out.items.length || pending)) {
+          flush(); items = false;
+          const a = am.filter(x => x.v > 0).pop(); if (a && /^(sub\s*total|total\b)/i.test(s)) out.subtotal = a.v;
+          continue;
+        }
+        if (!am.length) {
+          // A name line: product names are printed in capitals. The reader adds junk beside them, so judge each piece on its own.
+          const cand = s.split(/\s{3,}|\t/).map(x => x.trim()).filter(x => (x.match(/[A-Z]/g) || []).length >= 4 && (x.match(/[a-z]/g) || []).length <= 1 && letters(x) >= 5);
+          if (cand.length) {
+            const nm = cand.reduce((a, b) => letters(b) >= letters(a) ? b : a).replace(/^[^A-Za-z0-9&(]+/, "").replace(/[\s|\\:;.,]+$/, "");
+            flush(); pending = nm; pendingTpd = /^tpd\b/i.test(nm);
+          }
+          else if (pendingTpd && /\d{4,}/.test(s)) { if (cur) cur.discountUnread = true; pending = null; pendingTpd = false; }
+          continue;
+        }
+        const last = am[am.length - 1];
+        if (last.v < 0 || pendingTpd) {
+          const d = Math.abs(last.v);
+          if (cur) { cur.discount = round2(cur.discount + d); cur.promo = pending ? pending.replace(/&|\s+$/g, "").trim() : "price drop"; }
+          pending = null; pendingTpd = false; continue;
+        }
+        if (pending) {
+          const it = mk(pending, pending, last.v);
+          const xm = s.match(/(?:^|\s)([0-9Il])\s*x\s/i);
+          const unit = am.length >= 2 ? am[0].v : null;
+          let q = xm ? (/[0-9]/.test(xm[1]) ? parseInt(xm[1], 10) : 1) : 1;
+          if (unit && unit > 0) { const r = Math.round(last.v / unit); if (r >= 1 && r <= 12 && Math.abs(r * unit - last.v) <= 0.03) q = r; }
+          it.qty = q; it.unitPrice = unit && q > 1 ? unit : null;
+          out.items.push(it); cur = it; pending = null; pendingTpd = false;
+        }
+      }
+      flush();
+    };
+    run(true);
+    if (!out.items.length) run(false);
+  }
+
+  // ---- reading the receipt text ----
+  function parse(text) {
+    const lines = String(text || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    const out = { store: null, profile: null, date: null, items: [], subtotal: null, total: null, count: null, basketDiscount: 0 };
+    const d = detect(lines); out.store = d.store; out.profile = d.p;
+    if (d.p === "costco") parseCostco(lines, out);
+    else if (d.p === "woolworths") parseWoolworths(lines, out);
+    else if (d.p === "coles") parseColes(lines, out);
+    else parseAldi(lines, out);
+    // No total line was read: take the card amount if there is one.
+    if (out.subtotal == null) {
+      for (const raw of lines) {
+        const s = clean(raw);
+        if (/card\s*sales|^eft\b|purchase\b/i.test(s)) { const a = amounts(s).filter(x => x.v > 0).pop(); if (a) { out.subtotal = a.v; break; } }
+      }
+    }
+    resolve(out);
+    return out;
+  }
+
+  // ---- checking the sums ----
+  // OCR mistakes are usually one look-alike digit: 3 for 8, 1 for 4, 5 for 8 and so on.
+  const LOOK = { "0": "869", "1": "47", "2": "7", "3": "85", "4": "19", "5": "6839", "6": "580", "7": "12", "8": "3056", "9": "4805" };
+  function altsOf(v) {
+    const str = Math.abs(v).toFixed(2).replace(".", ""), out = new Map();
+    for (let i = 0; i < str.length; i++) for (const r of (LOOK[str[i]] || "")) {
+      const t = str.slice(0, i) + r + str.slice(i + 1);
+      if (i === 0 && r === "0" && str.length > 3) continue;
+      const nv = round2(parseInt(t, 10) / 100); if (nv !== Math.abs(v)) out.set(nv, true);
+    }
+    return [...out.keys()];
+  }
+  function repair(out, diff) {
+    // diff is how much the receipt total is above the lines. Each entry shows how much a changed digit would move the sum.
+    const ents = [];
+    out.items.forEach((i, idx) => { if (i.amount != null && i.rate == null) altsOf(i.amount).forEach(nv => ents.push({ i, nv, d: round2(nv - i.amount), idx })); });
+    const near = (a, b) => Math.abs(a - b) < 0.005;
+    const singles = ents.filter(e => near(e.d, diff));
+    if (singles.length === 1) return { unique: [singles[0]] };
+    if (singles.length > 1) return { cands: singles.slice(0, 8) };
+    const pairs = [];
+    for (let a = 0; a < ents.length; a++) for (let b = a + 1; b < ents.length; b++) {
+      if (ents[a].idx !== ents[b].idx && near(ents[a].d + ents[b].d, diff)) pairs.push([ents[a], ents[b]]);
+    }
+    if (pairs.length === 1) return { unique: pairs[0] };
+    if (pairs.length && pairs.length <= 12) return { cands: pairs.reduce((a, p) => a.concat(p), []) };
+    return null;
+  }
+
+  function resolve(out) {
+    out.items.forEach(it => {
+      // If the quantity digit is garbled, the price on the line and the unit price still agree on it.
+      if (it.unitPrice && it.amount != null && !it.discount) {
+        const q = Math.round(it.amount / it.unitPrice);
+        if (q >= 2 && q <= 12 && Math.abs(q * it.unitPrice - it.amount) <= 0.03) it.qty = q;
+      }
+      it.alt = null;
+      if (it.rate && it.weight) it.alt = round2(it.rate * it.weight);
+      else if (it.qty > 1 && it.unitPrice) it.alt = round2(it.qty * it.unitPrice);
+      if (it.amount == null && it.alt != null) { it.amount = it.alt; it.inferred = true; }
+    });
+    const disc = () => round2(out.items.reduce((a, i) => a + (i.discount || 0), 0) + (out.basketDiscount || 0));
+    const total = () => round2(out.items.reduce((a, i) => a + (i.amount || 0), 0) - disc());
+    out.inferredFromTotal = false; out.repaired = 0;
+    const miss = out.items.filter(i => i.amount == null);
+    if (miss.length === 1 && out.subtotal != null) {
+      const v = round2(out.subtotal - total());
+      if (v > 0 && v < 300) { miss[0].amount = v; miss[0].inferred = true; out.inferredFromTotal = true; }
+    }
+    // One misread digit: the quantity or weight line on the same item can give the right price.
+    if (out.subtotal != null && !out.inferredFromTotal && out.items.every(i => i.amount != null) && Math.abs(total() - out.subtotal) >= 0.005) {
+      for (const i of out.items) {
+        if (i.alt != null && Math.abs(i.alt - i.amount) > 0.001 && Math.abs(total() - i.amount + i.alt - out.subtotal) < 0.005) { i.amount = i.alt; i.fixed = true; break; }
+      }
+    }
+    // Still not adding up: look for one or two look-alike digits that would make it add up.
+    if (out.subtotal != null && !out.inferredFromTotal && out.items.length && out.items.every(i => i.amount != null) && Math.abs(total() - out.subtotal) >= 0.005 && out.items.length <= 60) {
+      const fix = repair(out, round2(out.subtotal - total()));
+      if (fix && fix.unique) fix.unique.forEach(e => { e.i.was = e.i.amount; e.i.amount = e.nv; e.i.fixed = true; e.i.digitFix = true; out.repaired++; });
+      else if (fix && fix.cands) {
+        // More than one way to make it add up: do not guess, but point at the lines that could be the problem.
+        fix.cands.forEach(e => { e.i.suggest = (e.i.suggest || []).filter(v => v !== e.nv).concat([e.nv]); });
+        out.suspects = out.items.filter(i => i.suggest).length;
+      }
+    }
+    out.discount = disc();
+    out.sum = total();
+    out.missing = out.items.filter(i => i.amount == null).length;
+    out.checkOk = out.subtotal != null && out.missing === 0 && Math.abs(out.sum - out.subtotal) < 0.005;
+    out.itemCount = out.items.reduce((a, i) => a + (i.qty || 1), 0);
+  }
+
+  // ---- matching to the item list ----
+  // ctx.items: [{store,item,pack,unit,qty,category,avg}], ctx.aliases: [{text,store,item}]
+  function analyse(text, ctx) {
+    const p = parse(text);
+    const store = (ctx && ctx.store) || p.store;
+    const pool = ((ctx && ctx.items) || []).filter(i => !store || i.store === store).map(i => ({ i, t: tokens(i.item), pk: parsePack(i.pack) }));
+    const als = ((ctx && ctx.aliases) || []).filter(a => !store || a.store === store).map(a => ({ a, t: tokens(a.text) }));
+    let rows = p.items.map(it => {
+      const pk = it.rate != null ? { k: "perkg", v: 1, alts: [{ k: "perkg", v: 1 }] } : parsePack(it.desc);
+      const rt = tokens(it.desc);
+      let best = null, bs = 0, viaAlias = false;
+      pool.forEach(c => { const sc = score(rt, c.t); if (sc > bs) { bs = sc; best = c; viaAlias = false; } });
+      als.forEach(c => {
+        const sc = score(rt, c.t);
+        if (sc >= 0.8 && sc >= bs - 0.001) { const hit = pool.find(x => x.i.item === c.a.item); if (hit) { bs = Math.max(sc, bs); best = hit; viaAlias = true; } }
+      });
+      let compat = best ? packCompat(pk, best.pk) : true;
+      // A per-kg item bought as a bunch or a pack is not the same thing as a price per kg.
+      if (best && compat && best.pk && best.pk.k === "perkg" && it.rate == null && !it.weighed && /\b(bunch|each|ea|pk|pack)\b|\bp\/p\b/i.test(it.desc)) compat = false;
+      // An identical pack size (500g and 500g, say) is extra evidence the two are the same product.
+      const bonus = best && compat && pk && best.pk && (pk.k === "g" || pk.k === "ml" || pk.k === "n") ? 0.15 : 0;
+      const eff = Math.min(1, bs + bonus);
+      let status = "new";
+      if (best && viaAlias) status = "alias";
+      else if (best && eff >= 0.7 && compat) status = "auto";
+      else if (best && eff >= 0.55 && compat) status = "maybe";
+      else if (best && eff >= 0.85) status = "maybe";
+      const name = pretty(it.desc) || it.desc;
+      // Sold by weight, but no weight line was read: the line total is not a price per kg, so ask for it.
+      const weighed = it.rate == null && (it.weighed || !!(best && (status === "auto" || status === "alias") && best.pk && best.pk.k === "perkg"));
+      const net = it.amount != null ? round2(it.amount - (it.discount || 0)) : null;
+      let price = null, note = [];
+      if (it.rate != null) price = it.rate;
+      else if (weighed) { price = null; note.push("Sold by weight. Type the price per kg from the shelf label, or leave it out."); }
+      else if (it.qty > 1) price = it.discount ? (net != null ? round2(net / it.qty) : null) : (it.unitPrice != null ? it.unitPrice : (it.amount != null ? round2(it.amount / it.qty) : null));
+      else price = net;
+      if (it.discount && price != null && !weighed && it.rate == null) {
+        const shelf = it.amount != null ? round2(it.amount / (it.qty || 1)) : null;
+        note.push("Price is after a " + (it.promo ? it.promo.replace(/\s+/g, " ") + " " : "promo ") + "saving of $" + it.discount.toFixed(2) + (shelf != null ? " (shelf price $" + shelf.toFixed(2) + ")" : "") + ".");
+      }
+      if (it.discountUnread) note.push("A discount line under this item could not be read. Check the price.");
+      if (best && status !== "new" && !compat) note.push("Pack differs: " + (it.rate != null ? "sold per kg" : "this receipt says " + (it.desc.match(/\d[\d.]*\s?(?:x\s?\d[\d.]*\s?)?(?:kg|g|ml|l|pk)\b|\bea\b|\beach\b/i) || ["a different pack"])[0].replace(/\s+/g, "")) + ", your list has " + best.i.pack + ".");
+      if (it.amount == null) note.push("Price was unreadable. Check it.");
+      else if (it.digitFix) note.push("Price looked misread (" + money2(it.was) + "). Changed to " + money2(it.amount) + " so the receipt adds up. Check it.");
+      else if (it.inferred) note.push("Price was unreadable and was worked out. Check it.");
+      if (it.suggest && it.suggest.length) note.push("Might be misread. If so, " + it.suggest.slice(0, 2).map(money2).join(" or ") + " would make the receipt add up.");
+      const ni = newItemFor(pk, name, weighed || it.rate != null);
+      const mi = best && status !== "new" ? best.i : null;
+      return {
+        raw: it.raw, desc: it.desc, qty: it.qty, amount: it.amount, weighed, hasRate: it.rate != null,
+        status, matched: best ? best.i.item : null, perkg: !!(best && best.pk && best.pk.k === "perkg"), avg: best ? best.i.avg || null : null, score: Math.round(bs * 100) / 100, compat,
+        item: (status === "new" || !best) ? name : best.i.item,
+        category: mi ? mi.category : guessCategory(name),
+        newItem: ni,
+        cur: mi ? { category: mi.category || "", pack: mi.pack || "", unit: mi.unit || "", qty: mi.qty == null ? "" : mi.qty } : null,
+        price, note, discount: it.discount || 0, fixed: !!it.fixed,
+        on: (status === "auto" || status === "alias") && price != null
+      };
+    });
+    // The same product on two lines at the same price (Costco prints each one separately) becomes one row.
+    const merged = [];
+    rows.forEach(r => {
+      const twin = merged.find(m => m.desc.toLowerCase() === r.desc.toLowerCase() && m.price != null && m.price === r.price && !m.weighed && !m.hasRate);
+      if (twin) {
+        twin.qty += r.qty; twin.lines += 1;
+        twin.note = twin.note.filter(n => !/^Appears on/.test(n)).concat(["Appears on " + twin.lines + " lines at the same price. Logged once."]);
+      } else { r.lines = 1; merged.push(r); }
+    });
+    rows = merged;
+    // If the receipt says more items than were read, a "Qty 3 @" line was probably missed. Use the usual price to spot which row.
+    const deficit = p.count != null ? p.count - p.itemCount : 0;
+    if (deficit > 0) {
+      const cands = [];
+      rows.forEach(r => {
+        if (r.qty !== 1 || r.hasRate || r.weighed || r.perkg || r.amount == null || !r.avg || r.status === "new") return;
+        for (let k = 2; k <= deficit + 1; k++) {
+          const err = Math.abs(r.amount / k - r.avg) / r.avg;
+          if (err <= 0.08 && Math.abs(r.amount - r.avg) / r.avg > 0.4) { cands.push({ r, k, err }); break; }
+        }
+      });
+      // Only act when exactly one row explains the missing items, otherwise leave it and let the page warn.
+      const fits = cands.filter(c => c.k - 1 === deficit);
+      if (fits.length === 1 && cands.length === 1) {
+        const c = fits[0];
+        c.r.qty = c.k; c.r.price = round2(c.r.amount / c.k);
+        c.r.note.push("Looks like " + c.k + " were bought: price per item worked out.");
+      }
+    }
+    const itemCount = p.items.reduce((a, i) => a + (i.qty || 1), 0);
+    return { store: store || null, profile: p.profile, date: p.date, rows, subtotal: p.subtotal, total: p.total, sum: p.sum, checkOk: p.checkOk, inferredFromTotal: p.inferredFromTotal,
+      repaired: p.repaired, suspects: p.suspects || 0, discount: p.discount, basketDiscount: p.basketDiscount, missing: p.missing, count: p.count, itemCount,
+      countOk: p.count == null ? null : itemCount === p.count };
+  }
+  // How trustworthy a reading is, for choosing between passes over the same photo. 4 is exact; lower is worse.
+  function rank(r) {
+    if (!r.rows.length) return -1;
+    const countOk = r.countOk !== false;
+    if (r.checkOk && !r.inferredFromTotal && countOk) return 4;
+    if (r.checkOk && countOk) return 3;
+    if (r.checkOk) return 2;
+    if (r.subtotal == null) return 0.5 + Math.min(r.rows.length, 60) / 200 - r.missing * 0.02;
+    const cd = r.count != null ? Math.abs(r.count - r.itemCount) : 0;
+    return 1 - Math.min(0.99, (r.missing * 5 + cd * 8 + Math.min(Math.abs((r.sum || 0) - r.subtotal), 100) / 5) / 100);
+  }
+  const money2 = n => "$" + Number(n).toFixed(2);
+
+  // Several readings of one photo: fill gaps and outvote single misreads, line by line.
+  // results[0] is the best reading; the rest are the other passes.
+  function consensus(results) {
+    const base = results[0];
+    if (!base || results.length < 2 || base.rows.length === 0) return base;
+    let delta = 0, filled = 0, outvoted = 0;
+    base.rows.forEach(r => {
+      if (r.weighed || r.hasRate || r.fixed) return;
+      const votes = new Map();
+      const add = x => { if (x.price == null || x.amount == null) return; const k = x.price.toFixed(2); const v = votes.get(k) || { n: 0, price: x.price, amount: x.amount }; v.n++; votes.set(k, v); };
+      add(r);
+      const rt = tokens(r.desc);
+      results.slice(1).forEach(o => {
+        let m = null, bs = 0;
+        o.rows.forEach(x => { if (x.weighed || x.hasRate || x.qty !== r.qty) return; const sc = score(rt, tokens(x.desc)); if (sc > bs) { bs = sc; m = x; } });
+        if (m && bs >= 0.8) add(m);
+      });
+      if (!votes.size) return;
+      const mine = r.price != null ? votes.get(r.price.toFixed(2)) : null;
+      let win = null; votes.forEach(v => { if (!win || v.n > win.n) win = v; });
+      if (r.price == null) {
+        r.price = win.price; r.amount = win.amount; filled++; delta += win.amount * (r.lines || 1);
+        r.note = r.note.filter(n => !/^Price was unreadable/.test(n)).concat(["Price was unreadable in the first reading and was taken from another. Check it."]);
+        r.on = r.on || (r.status === "auto" || r.status === "alias");
+      } else if (mine && win.n > mine.n) {
+        delta += (win.amount - r.amount) * (r.lines || 1);
+        r.note = r.note.concat(["Read as " + money2(r.price) + " once and " + money2(win.price) + " more often. Using " + money2(win.price) + "."]);
+        r.price = win.price; r.amount = win.amount; outvoted++;
+      } else if (votes.size > 1 && !r.discount) {
+        const other = [...votes.values()].find(v => v !== mine);
+        if (other) r.note = r.note.concat(["Another reading gave " + money2(other.price) + ". Check it."]);
+      }
+    });
+    if (filled || outvoted) {
+      base.missing = base.rows.filter(r => r.amount == null).length;
+      base.sum = round2((base.sum || 0) + delta);
+      if (base.subtotal != null) base.checkOk = base.missing === 0 && Math.abs(base.sum - base.subtotal) < 0.005;
+      base.merged = filled + outvoted;
+    }
+    return base;
+  }
+
+  return { rank, consensus, parse, analyse, parsePack, packCompat, tokens, score, pretty, guessCategory, newItemFor };
+})();
+if (typeof module !== "undefined" && module.exports) module.exports = ReceiptLib;
+
 
 // ---- helpers ----
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+// Phones sometimes drop saved website data. The sign-in and the unsent prices are therefore also kept in a second store (IndexedDB),
+// and the sign-in in a long-lived cookie, and put back if the first copy has gone.
+const MIRROR = ["gi2_set", "gi2_pending", "gi2_alias", "gi2_edits"];
+const IDBX = {
+  db: null,
+  open() {
+    if (!this.db) this.db = new Promise(res => {
+      try { const r = indexedDB.open("gi2", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch (e) { res(null); }
+    });
+    return this.db;
+  },
+  async get(k) {
+    const db = await this.open(); if (!db) return undefined;
+    return new Promise(res => { try { const q = db.transaction("kv").objectStore("kv").get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(undefined); } catch (e) { res(undefined); } });
+  },
+  async set(k, v) { const db = await this.open(); if (!db) return; try { db.transaction("kv", "readwrite").objectStore("kv").put(v, k); } catch (e) {} }
+};
+const cookiePath = () => location.pathname.replace(/[^/]*$/, "") || "/";
+function saveCookie(v) {
+  try {
+    const on = !!(v && v.key);
+    document.cookie = "gi2s=" + encodeURIComponent(on ? JSON.stringify(v) : "") + "; max-age=" + (on ? 34560000 : 0) + "; path=" + cookiePath() + "; SameSite=Strict" + (location.protocol === "https:" ? "; Secure" : "");
+  } catch (e) {}
+}
+function readCookie() { try { const m = document.cookie.match(/(?:^|;\s*)gi2s=([^;]*)/); const t = m ? decodeURIComponent(m[1]) : ""; return t ? JSON.parse(t) : null; } catch (e) { return null; } }
 const LS = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+  set(k, v) {
+    let ok = false;
+    try { localStorage.setItem(k, JSON.stringify(v)); ok = true; } catch (e) {}
+    if (MIRROR.includes(k)) { IDBX.set(k, JSON.stringify(v)); if (k === "gi2_set") saveCookie(v); }
+    return ok;
+  }
 };
 const pad = n => String(n).padStart(2, "0");
 const today = () => { const d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
@@ -183,13 +940,16 @@ const fmtDay = iso => new Date(iso).toLocaleDateString("en-AU", { day: "numeric"
 const fmtD = s => new Date(s + "T00:00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "2-digit" });
 const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
 const key = (s, i) => s + "|" + i;
+const aliasKey = a => [a.store, a.item, String(a.text).toLowerCase()].join("|");
 
 // ---- state ----
 let ITEMS = [], LOG = [], META = "";
 let PENDING = LS.get("gi2_pending", []);
 let SET = LS.get("gi2_set", {});
 let STAT = new Map(), BYNK = new Map(), view = [];
-let store = "All", cat = "All", sort = "az", q = "", busy = false;
+let store = "All", cat = "All", sort = "az", q = "", busy = false, popOnly = false;
+let ALIASES = LS.get("gi2_alias", []);
+let EDITS = LS.get("gi2_edits", []); // changes to existing items (pack, unit and so on) waiting to upload
 const open = new Set();
 const api = () => SET.api || CONFIG.API_URL || "";
 const configured = () => !!api() && !!SET.key;
@@ -216,6 +976,13 @@ function build() {
     if (!items.has(key(p.store, p.item)) && p.newItem)
       items.set(key(p.store, p.item), { store: p.store, category: p.newItem.category || "Other", item: p.item, pack: p.newItem.pack || "",
         unit: p.newItem.unit || "", qty: Number(p.newItem.qty) || 0, note: "", check: "", pts: [] });
+  });
+  EDITS.forEach(ed => {
+    const x = items.get(key(ed.store, ed.item)); if (!x) return;
+    if (ed.category) x.category = ed.category;
+    if (ed.pack) x.pack = ed.pack;
+    if (ed.unit) x.unit = ed.unit;
+    if (ed.qty !== "" && ed.qty != null && !isNaN(Number(ed.qty))) x.qty = Number(ed.qty);
   });
   const add = (s, it, date, price, pending) => {
     const e = items.get(key(s, it)); if (!e) return;
@@ -258,17 +1025,18 @@ function chips() {
   const stores = ["All", ...new Set(all.map(e => e.store))];
   const cats = ["All", ...new Set(all.map(e => e.category))];
   $("#stores").innerHTML = stores.map(s => `<button class="chip${s === store ? " on" : ""}" data-s="${esc(s)}" type="button">${esc(s === "All" ? "All stores" : s)}</button>`).join("");
-  $("#cats").innerHTML = cats.map(c => `<button class="chip sm${c === cat ? " on" : ""}" data-c="${esc(c)}" type="button">${esc(c === "All" ? "All categories" : c)}</button>`).join("");
+  $("#cats").innerHTML = `<button class="chip sm${popOnly ? " on" : ""}" data-pop="1" type="button">&#9733; Popular</button>` + cats.map(c => `<button class="chip sm${c === cat ? " on" : ""}" data-c="${esc(c)}" type="button">${esc(c === "All" ? "All categories" : c)}</button>`).join("");
 }
 
 function apply() {
   const words = q.toLowerCase().trim().split(/\s+/).filter(Boolean);
   $("#clr").style.display = q ? "block" : "none";
-  view = [...STAT.values()].filter(e => (store === "All" || e.store === store) && (cat === "All" || e.category === cat) &&
+  view = [...STAT.values()].filter(e => (store === "All" || e.store === store) && (cat === "All" || e.category === cat) && (!popOnly || e.pts.length >= POP_MIN) &&
     words.every(w => (e.item + " " + e.category + " " + e.store).toLowerCase().includes(w)));
   const by = {
     az: (a, b) => a.item.localeCompare(b.item) || a.store.localeCompare(b.store),
     cat: (a, b) => a.category.localeCompare(b.category) || a.item.localeCompare(b.item),
+    pop: (a, b) => b.pts.length - a.pts.length || a.item.localeCompare(b.item),
     up: (a, b) => b.delta - a.delta,
     down: (a, b) => a.delta - b.delta
   };
@@ -330,7 +1098,7 @@ function render() {
     return `<article class="card${isOpen ? " open" : ""}" data-k="${esc(k)}">
       <div class="row">
         <div><div class="name">${esc(d.item)}</div>
-          <div class="meta"><span class="store">${esc(d.store)}</span>${esc(d.category)}${d.pack ? " &middot; " + esc(d.pack) : ""}</div>${warn}${hint}</div>
+          <div class="meta"><span class="store">${esc(d.store)}</span>${esc(d.category)}${d.pack ? " &middot; " + esc(d.pack) : ""}${sort === "pop" || popOnly ? " &middot; " + d.pts.length + (d.pts.length === 1 ? " price" : " prices") : ""}</div>${warn}${hint}</div>
         <div class="price"><b>${d.up != null ? money(d.up) : "&mdash;"}</b><span>${esc(unitLabel(d.unit))}</span>${badge}</div>
       </div>
       <div class="more">${isOpen ? moreHtml(d) : ""}</div></article>`;
@@ -338,7 +1106,7 @@ function render() {
 }
 
 function updateTop() {
-  const n = PENDING.length;
+  const n = PENDING.length + EDITS.length;
   const b = $("#badge"); b.textContent = n; b.classList.toggle("on", n > 0);
   $("#up").disabled = busy;
   const conn = !api() ? (SEED ? "demo" : "not connected") : (navigator.onLine ? "online" : "offline");
@@ -371,8 +1139,14 @@ async function call(body) {
   if (!j.ok) throw new Error(j.error || "The sheet refused the request");
   return j;
 }
-function applyData(j) {
+function applyData(j, sentAliases) {
   ITEMS = j.items; LOG = j.log; META = "Updated " + fmtDay(j.at);
+  if (Array.isArray(j.aliases)) {
+    const have = new Set(j.aliases.map(a => aliasKey(a)));
+    const keep = ALIASES.filter(a => a.isNew && !(sentAliases || []).includes(a) && !have.has(aliasKey(a)));
+    ALIASES = j.aliases.map(a => ({ text: a.text, store: a.store, item: a.item })).concat(keep);
+    LS.set("gi2_alias", ALIASES);
+  }
   LS.set("gi2_cache", { items: j.items, log: j.log, at: j.at });
 }
 async function refresh() {
@@ -386,16 +1160,19 @@ async function sync() {
   if (!navigator.onLine) { toast("No signal. Prices are saved here and will upload later."); return; }
   busy = true; updateTop();
   try {
-    const sent = PENDING.slice();
-    const body = sent.length
+    const sent = PENDING.slice(), sentAl = ALIASES.filter(a => a.isNew), sentEd = EDITS.slice();
+    const body = sent.length || sentAl.length || sentEd.length
       ? { action: "add",
+          updates: sentEd.map(e => ({ store: e.store, item: e.item, category: e.category, pack: e.pack, unit: e.unit, qty: e.qty })),
           entries: sent.map(p => ({ id: p.id, date: p.date, store: p.store, item: p.item, price: p.price, who: p.who })),
-          items: sent.filter(p => p.newItem).map(p => Object.assign({ store: p.store, item: p.item }, p.newItem)) }
+          items: sent.filter(p => p.newItem).map(p => Object.assign({ store: p.store, item: p.item }, p.newItem)),
+          aliases: sentAl.map(a => ({ text: a.text, store: a.store, item: a.item, who: SET.who || "" })) }
       : { action: "read" };
     const j = await call(body);
     PENDING = PENDING.filter(p => !sent.some(s => s.id === p.id)); LS.set("gi2_pending", PENDING);
-    applyData(j);
-    toast(sent.length ? "Uploaded " + sent.length + (sent.length === 1 ? " price" : " prices") : "Up to date");
+    EDITS = EDITS.filter(e => !sentEd.includes(e)); LS.set("gi2_edits", EDITS);
+    applyData(j, sentAl);
+    toast(sent.length ? "Uploaded " + sent.length + (sent.length === 1 ? " price" : " prices") + (sentEd.length ? " and " + sentEd.length + (sentEd.length === 1 ? " item change" : " item changes") : "") : sentEd.length ? "Uploaded " + sentEd.length + (sentEd.length === 1 ? " item change" : " item changes") : "Up to date");
   } catch (e) {
     toast("Upload failed: " + e.message + ". Prices are still saved here.");
   }
@@ -403,10 +1180,55 @@ async function sync() {
 }
 
 // ---- dialogs ----
+const b64 = o => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const unb64 = t => JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g, "+").replace(/_/g, "/")))));
+function signInLink() {
+  if (!SET.key) return "";
+  return location.origin + location.pathname + "#setup=" + b64({ k: SET.key, a: api() });
+}
 function openSettings() {
   $("#s-key").value = SET.key || ""; $("#s-who").value = SET.who || ""; $("#s-api").value = SET.api || "";
   $("#s-api-wrap").style.display = CONFIG.API_URL ? "none" : "block";
+  $("#s-link").value = signInLink(); $("#s-share").hidden = !SET.key; $("#s-out").hidden = !SET.key;
   $("#setdlg").showModal();
+}
+async function copyLink() {
+  const el = $("#s-link"); if (!el.value) return;
+  try { await navigator.clipboard.writeText(el.value); toast("Link copied. Send it only to family."); }
+  catch (e) { el.focus(); el.select(); toast("Press and hold the link, then choose Copy."); }
+}
+function signOut() {
+  SET = { who: SET.who || "", api: SET.api || "" }; LS.set("gi2_set", SET); saveCookie(null);
+  $("#setdlg").close(); updateTop(); toast("Signed out on this phone. Unsent prices are kept.");
+}
+// A sign-in link carries the passcode after the # sign. That part is never sent to any server.
+function applySetupLink() {
+  const m = location.hash.match(/^#setup=([A-Za-z0-9_-]+)/); if (!m) return false;
+  try {
+    const j = unb64(m[1]);
+    if (j && j.k) { SET = { key: String(j.k), api: j.a && !CONFIG.API_URL ? String(j.a) : (SET.api || ""), who: SET.who || "" }; LS.set("gi2_set", SET); }
+    history.replaceState(null, "", location.pathname + location.search);
+    return !!(j && j.k);
+  } catch (e) { return false; }
+}
+async function restore() {
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+  let changed = false;
+  const got = {};
+  for (const k of MIRROR) {
+    let have = null; try { have = localStorage.getItem(k); } catch (e) {}
+    if (have != null) { IDBX.set(k, have); continue; }
+    const v = await IDBX.get(k);
+    if (v != null) { try { localStorage.setItem(k, v); } catch (e) {} try { got[k] = JSON.parse(v); } catch (e) {} changed = true; }
+  }
+  if (!SET.key && !(got.gi2_set && got.gi2_set.key)) { const c = readCookie(); if (c && c.key) { got.gi2_set = c; LS.set("gi2_set", c); changed = true; } }
+  if (changed) {
+    if (got.gi2_set && got.gi2_set.key) SET = got.gi2_set;
+    if (got.gi2_pending && !PENDING.length) PENDING = got.gi2_pending;
+    if (got.gi2_alias && !ALIASES.length) ALIASES = got.gi2_alias;
+    if (got.gi2_edits && !EDITS.length) EDITS = got.gi2_edits;
+    recalc(); if (configured() && navigator.onLine) refresh();
+  }
 }
 function saveSettings() {
   SET = { key: $("#s-key").value.trim(), who: $("#s-who").value.trim(), api: $("#s-api").value.trim() };
@@ -435,12 +1257,300 @@ function submitNew(ev) {
   q = it; $("#q").value = it; apply();
 }
 
+// ---- receipt scanning ----
+let scanAbort = false, scanWorker = null, RS = null;
+
+function ctx(store) {
+  return { store: store || null, aliases: ALIASES,
+    items: [...STAT.values()].map(e => ({ store: e.store, item: e.item, pack: e.pack, unit: e.unit, qty: e.qty, category: e.category, avg: e.avg })) };
+}
+function canon(st, name) {
+  const n = String(name || "").trim().toLowerCase(); if (!n) return null;
+  for (const e of STAT.values()) if (e.store === st && e.item.toLowerCase() === n) return e.item;
+  return null;
+}
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const el = document.createElement("script"); el.src = src; el.onload = res;
+    el.onerror = () => rej(new Error("Could not load the receipt reader. Scanning needs wifi or signal the first time."));
+    document.head.appendChild(el);
+  });
+}
+function loadImage(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Could not open that photo.")); };
+    img.src = url;
+  });
+}
+// Grayscale and stretch the contrast. The reader copes much better with that than with a colour photo.
+function drawGray(img, sx, sy, sw, sh, longSide) {
+  const k = Math.min(2, longSide / Math.max(sw, sh));
+  const w = Math.max(1, Math.round(sw * k)), h = Math.max(1, Math.round(sh * k));
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d", { willReadFrequently: true });
+  x.imageSmoothingQuality = "high"; x.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+  const d = x.getImageData(0, 0, w, h), p = d.data, hist = new Uint32Array(256);
+  for (let i = 0; i < p.length; i += 4) { const g = (p[i] * 0.299 + p[i + 1] * 0.587 + p[i + 2] * 0.114) | 0; p[i] = g; hist[g]++; }
+  const cut = w * h * 0.01; let lo = 0, hi = 255, a = 0;
+  while (lo < 255 && (a += hist[lo]) <= cut) lo++;
+  a = 0; while (hi > 0 && (a += hist[hi]) <= cut) hi--;
+  const span = Math.max(1, hi - lo);
+  for (let i = 0; i < p.length; i += 4) { let g = (p[i] - lo) * 255 / span; g = g < 0 ? 0 : g > 255 ? 255 : g; p[i] = p[i + 1] = p[i + 2] = g; p[i + 3] = 255; }
+  x.putImageData(d, 0, 0);
+  return c;
+}
+// Finds the bright paper strip in the photo so the reader is not distracted by the table.
+function paperBox(img) {
+  const W = img.naturalWidth || img.width, H = img.naturalHeight || img.height, k = 400 / Math.max(W, H);
+  const w = Math.max(1, Math.round(W * k)), h = Math.max(1, Math.round(H * k));
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(img, 0, 0, w, h);
+  const p = x.getImageData(0, 0, w, h).data, g = new Uint8Array(w * h), hist = new Uint32Array(256);
+  for (let i = 0, j = 0; i < p.length; i += 4, j++) { g[j] = (p[i] * 0.299 + p[i + 1] * 0.587 + p[i + 2] * 0.114) | 0; hist[g[j]]++; }
+  const pct = f => { let a = 0; for (let v = 0; v < 256; v++) { a += hist[v]; if (a >= f * w * h) return v; } return 255; };
+  const lo = pct(0.1), hi = pct(0.95), thr = lo + 0.6 * (hi - lo);
+  const cols = new Float32Array(w), rows = new Float32Array(h);
+  for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) if (g[yy * w + xx] > thr) { cols[xx] += 1 / h; rows[yy] += 1 / w; }
+  const cm = Math.max(...cols), rm = Math.max(...rows);
+  let x0 = -1, x1 = -1, y0 = -1, y1 = -1;
+  for (let i = 0; i < w; i++) if (cols[i] > 0.25 * cm) { if (x0 < 0) x0 = i; x1 = i; }
+  for (let i = 0; i < h; i++) if (rows[i] > 0.25 * rm) { if (y0 < 0) y0 = i; y1 = i; }
+  if (x0 < 0 || y0 < 0 || x1 - x0 < 3 || y1 - y0 < 3) return null;
+  const frac = ((x1 - x0) * (y1 - y0)) / (w * h);
+  if (frac > 0.9 || frac < 0.08) return null;
+  const X0 = Math.max(0, Math.round((x0 - 0.05 * w) / k)), X1 = Math.min(W, Math.round((x1 + 1 + 0.05 * w) / k));
+  const Y0 = Math.max(0, Math.round((y0 - 0.05 * h) / k)), Y1 = Math.min(H, Math.round((y1 + 1 + 0.05 * h) / k));
+  return { x: X0, y: Y0, w: X1 - X0, h: Y1 - Y0 };
+}
+// Up to three attempts at different sizes, because the reader's accuracy varies with the image. The receipt's own subtotal decides which is right.
+function scanJobs(img) {
+  const W = img.naturalWidth || img.width, H = img.naturalHeight || img.height;
+  return [
+    () => { const b = paperBox(img); return b ? drawGray(img, b.x, b.y, b.w, b.h, 2500) : drawGray(img, 0, 0, W, H, 2000); },
+    () => drawGray(img, 0, 0, W, H, 2500),
+    () => drawGray(img, 0, 0, W, H, 3000)
+  ];
+}
+function setBusy(title, msg, frac) {
+  $("#r-busy").hidden = false; $("#r-review").hidden = true; $("#rdlg").classList.remove("full");
+  $("#r-title").textContent = title; $("#r-msg").textContent = msg || "";
+  $("#r-prog").style.width = Math.round((frac || 0) * 100) + "%";
+  $("#r-cancel").textContent = "Cancel";
+}
+async function runScan(file) {
+  scanAbort = false;
+  if (!$("#rdlg").open) $("#rdlg").showModal();
+  setBusy("Reading receipt", "Opening photo…", 0.02);
+  let pass = 0, jobs = [];
+  try {
+    if (!window.Tesseract) { setBusy("Reading receipt", "Loading the reader. This only happens the first time.", 0.04); await loadScript(TESS_URL); }
+    const img = await loadImage(file);
+    jobs = scanJobs(img);
+    scanWorker = await Tesseract.createWorker("eng", 1, { logger: m => {
+      if (m.status === "recognizing text") $("#r-prog").style.width = Math.round(((pass + m.progress) / jobs.length) * 92 + 6) + "%";
+    } });
+    await scanWorker.setParameters({ tessedit_pageseg_mode: "6" });
+    let best = null; const all = [];
+    for (pass = 0; pass < jobs.length; pass++) {
+      if (scanAbort) throw new Error("cancel");
+      setBusy("Reading receipt", pass ? "Checking again (" + (pass + 1) + " of " + jobs.length + ")…" : "This takes about 10 to 30 seconds.", (pass / jobs.length) * 0.92 + 0.06);
+      const canvas = jobs[pass](); if (!canvas) continue;
+      const out = await scanWorker.recognize(canvas);
+      if (scanAbort) throw new Error("cancel");
+      const text = out.data.text, res = ReceiptLib.analyse(text, ctx());
+      res.rank = ReceiptLib.rank(res); res.text = text; all.push(res);
+      if (!best || res.rank > best.rank) best = res;
+      if (res.rank >= 3) break;
+      // No total on the photo to check against: a complete reading is as good as it will get.
+      if (res.subtotal == null && res.missing === 0 && res.rows.length >= 3) break;
+    }
+    if (best && best.rank < 4 && all.length > 1) best = ReceiptLib.consensus([best].concat(all.filter(r => r !== best).sort((a, b) => b.rank - a.rank)));
+    try { await scanWorker.terminate(); } catch (e) {} scanWorker = null;
+    if (!best || !best.rows.length) { setBusy("Could not read the receipt", "No item lines were found. Lay the receipt flat, fill the photo with it, and try again.", 0); $("#r-cancel").textContent = "Close"; return; }
+    openReview(best);
+  } catch (e) {
+    try { if (scanWorker) await scanWorker.terminate(); } catch (e2) {} scanWorker = null;
+    if (String(e.message) === "cancel") { if ($("#rdlg").open) $("#rdlg").close(); return; }
+    setBusy("Could not read the receipt", e.message || "Something went wrong.", 0); $("#r-cancel").textContent = "Close";
+  }
+}
+
+function openReview(res) {
+  RS = { text: res.text, store: res.store || "", date: res.date || today(), dateGuess: !res.date, res, rows: [] };
+  fillRows(res);
+  const stores = [...new Set([...STAT.values()].map(e => e.store))];
+  $("#dl-rstore").innerHTML = stores.map(s => `<option value="${esc(s)}">`).join("");
+  $("#r-store").value = RS.store; $("#r-date").value = RS.date;
+  $("#r-busy").hidden = true; $("#r-review").hidden = false; $("#rdlg").classList.add("full");
+  if (!$("#rdlg").open) $("#rdlg").showModal();
+  $("#r-scroll").scrollTop = 0;
+}
+function fillRows(res) {
+  RS.res = res;
+  RS.rows = res.rows.map(r => { const o = Object.assign({}, r, { cat: r.category }); Object.assign(o, detailsFor(o)); return o; });
+  const stName = RS.store.trim();
+  $("#dl-ritems").innerHTML = [...STAT.values()].filter(e => !stName || e.store === stName).map(e => `<option value="${esc(e.item)}">`).join("");
+  $("#dl-cat").innerHTML = [...new Set([...STAT.values()].map(e => e.category))].map(c => `<option value="${esc(c)}">`).join("");
+  const box = $("#r-check"), money0 = n => n == null ? "?" : money(n);
+  const bd = res.basketDiscount > 0 ? " The " + money(res.basketDiscount) + " store-wide discount is not included in the item prices." : "";
+  if (res.checkOk && !res.inferredFromTotal && !res.repaired && !res.merged && res.countOk !== false) { box.className = "rcheck ok"; box.textContent = "✓ Prices add up to the receipt total (" + money(res.subtotal) + ")" + (res.count ? " and all " + res.count + " items were found." : ".") + bd; }
+  else if (res.checkOk && res.repaired) { box.className = "rcheck bad"; box.textContent = "Prices add up to the receipt total (" + money(res.subtotal) + "), but " + res.repaired + (res.repaired === 1 ? " price looked" : " prices looked") + " misread and " + (res.repaired === 1 ? "was" : "were") + " corrected. Check the lines marked below." + bd; }
+  else if (res.checkOk && res.merged) { box.className = "rcheck bad"; box.textContent = "Prices add up to the receipt total (" + money(res.subtotal) + "), after combining several readings of the photo. Check the lines marked below." + bd; }
+  else if (res.checkOk && res.inferredFromTotal) { box.className = "rcheck bad"; box.textContent = "One price was unreadable, so it was worked out from the total (" + money(res.subtotal) + "). Check the line marked below."; }
+  else if (res.checkOk) { box.className = "rcheck bad"; box.textContent = "Prices add up to " + money(res.subtotal) + ", but the receipt lists " + res.count + " items and " + res.itemCount + " were found. Check lines you bought more than once." + bd; }
+  else if (res.subtotal == null) { box.className = "rcheck bad"; box.textContent = res.profile === "costco" ? "The receipt total was not in the photo, so the prices could not be checked. Next time include the bottom of the receipt. For now, compare each line with the receipt." : "The total could not be read, so the prices could not be checked. Compare each line with the receipt."; }
+  else if (res.suspects) { box.className = "rcheck bad"; box.textContent = "Lines add up to " + money0(res.sum) + " but the receipt total is " + money(res.subtotal) + ". The lines marked below might be misread: compare them with the receipt." + bd; }
+  else { box.className = "rcheck bad"; box.textContent = "Lines add up to " + money0(res.sum) + " but the receipt total is " + money(res.subtotal) + ". A price may be misread, or a line was missed: compare with the receipt." + bd; }
+  if (RS.dateGuess) box.textContent += " The date was not found, so today's date is used.";
+  renderRows();
+}
+const UNITS = [["kg", "per kg"], ["L", "per L"], ["100g", "per 100g"], ["ea", "each"], ["egg", "per egg"], ["roll", "per roll"], ["can", "per can"], ["tablet", "per tablet"], ["capsule", "per capsule"], ["sachet", "per sachet"], ["bag", "per bag"], ["box", "per box"]];
+function unitOptions(cur) {
+  const list = UNITS.slice(); if (cur && !list.some(u => u[0] === cur)) list.push([cur, "per " + cur]);
+  return list.map(([v, l]) => `<option value="${esc(v)}"${v === cur ? " selected" : ""}>${esc(l)}</option>`).join("");
+}
+// The pack, unit and category an item starts with in the editor: its entry in your list if it has one, otherwise what the receipt suggests.
+function detailsFor(r) {
+  const ex = STAT.get(key(RS.store.trim(), r.item));
+  if (ex) return { cat: ex.category || "", pack: ex.pack || "", unit: ex.unit || "", uqty: ex.qty || "", existing: true };
+  const n = r.newItem || {};
+  return { cat: r.cat || n.category || "", pack: n.pack || "", unit: n.unit || "ea", uqty: n.qty == null ? "" : n.qty, existing: false };
+}
+const same = (a, b) => String(a == null ? "" : a).trim() === String(b == null ? "" : b).trim();
+function changedFrom(ex, r) {
+  return !same(r.pack, ex.pack) || !same(r.unit, ex.unit) || !same(r.uqty, ex.qty || "") || !same(r.cat, ex.category);
+}
+function calcHtml(r) {
+  const q = Number(r.uqty), ex = STAT.get(key(RS.store.trim(), r.item));
+  if (!(r.price > 0) || !(q > 0) || !r.unit) return "Fill in the price, units in pack and compare by to see the price per unit.";
+  const up = r.price / q;
+  let t = "Works out at <b>" + money(up) + " " + esc(unitLabel(r.unit)) + "</b>";
+  if (ex && ex.up != null && ex.unit === r.unit) t += " (your average is " + money(ex.up) + ")";
+  return t;
+}
+function helpHtml(r) {
+  const ex = STAT.get(key(RS.store.trim(), r.item));
+  if (!ex) return r.item.trim() ? "New item: it is added to your list when you upload." : "";
+  return changedFrom(ex, r) ? "This changes the item in your list when you upload." : "In your list: " + esc(ex.pack || "no pack") + ", compared " + esc(unitLabel(ex.unit)) + ".";
+}
+function rowHtml(r, i) {
+  r.isNew = !canon(RS.store.trim(), r.item);
+  const notes = r.note.map(n => `<div class="rnote">${esc(n)}</div>`).join("");
+  return `<div class="rrow" data-i="${i}">
+    <div class="rline"><input type="checkbox" class="rc"${r.on ? " checked" : ""} aria-label="Add this price">
+      <input class="ri" list="dl-ritems" value="${esc(r.item)}" aria-label="Item" autocomplete="off" autocapitalize="none" spellcheck="false">
+      <input class="rp" type="number" inputmode="decimal" step="0.01" min="0" value="${r.price != null ? r.price.toFixed(2) : ""}" placeholder="${r.weighed || r.hasRate ? "$/kg" : "$"}" aria-label="Price"></div>
+    <div class="rsub"><span>${esc(r.desc)}${r.qty > 1 ? " &middot; " + r.qty + " bought" : ""}</span><span class="rtag">${tagText(r)}</span></div>
+    ${notes}
+    <button class="rdet" type="button" aria-expanded="${r.open ? "true" : "false"}">${r.open ? "Hide details" : "Edit details"}</button>
+    <div class="rdetails"${r.open ? "" : " hidden"}>
+      <div class="two">
+        <div><label>Pack size</label><input class="rk-pack" value="${esc(r.pack)}" placeholder="500g" autocomplete="off" autocapitalize="none"></div>
+        <div><label>Compare by</label><select class="rk-unit">${unitOptions(r.unit)}</select></div>
+      </div>
+      <div class="two">
+        <div><label>Units in pack</label><input class="rk-qty" type="number" inputmode="decimal" step="any" min="0" value="${esc(r.uqty)}"></div>
+        <div><label>Category</label><input class="rk-cat" list="dl-cat" value="${esc(r.cat || "")}" autocomplete="off"></div>
+      </div>
+      <div class="rcalc">${calcHtml(r)}</div>
+      <div class="help rhelp">${helpHtml(r)}</div>
+    </div>
+  </div>`;
+}
+const tagText = r => r.isNew ? "New item" : (r.status === "maybe" && r.item === r.matched ? "Check this match" : "");
+function renderRows() { $("#r-rows").innerHTML = RS.rows.map(rowHtml).join(""); updateAdd(); }
+function updateAdd() {
+  const n = RS.rows.filter(r => r.on && r.price > 0 && r.item.trim()).length;
+  const b = $("#r-add"); b.textContent = n ? "Add " + n + (n === 1 ? " price" : " prices") : "Add prices"; b.disabled = !n;
+}
+function addAlias(text, st, item) {
+  const k = aliasKey({ text, store: st, item });
+  if (ALIASES.some(a => aliasKey(a) === k)) return;
+  ALIASES = ALIASES.filter(a => !(a.store === st && String(a.text).toLowerCase() === String(text).toLowerCase())).concat([{ text, store: st, item, isNew: true }]);
+}
+function addReceipt() {
+  const st = $("#r-store").value.trim(), date = $("#r-date").value;
+  if (!st) { toast("Choose the store"); return; }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { toast("Check the date"); return; }
+  const have = new Set(), sig = (s, i, d, p) => [s, i, d, Number(p).toFixed(2)].join("|");
+  LOG.forEach(l => have.add(sig(l.store, l.item, l.date, l.price))); PENDING.forEach(p => have.add(sig(p.store, p.item, p.date, p.price)));
+  let added = 0, dup = 0, edited = 0;
+  RS.rows.forEach(r => {
+    if (!r.on || !(r.price > 0) || !r.item.trim()) return;
+    const name = canon(st, r.item) || r.item.trim(), price = Math.round(r.price * 100) / 100, ex = STAT.get(key(st, name));
+    const q = String(r.uqty).trim() === "" || isNaN(Number(r.uqty)) ? "" : Number(r.uqty);
+    const det = { category: (r.cat || "").trim() || "Other", pack: (r.pack || "").trim(), unit: r.unit || "ea", qty: q };
+    // Item details changed in the editor go to the sheet as an update to that item, but only if something really changed.
+    if (ex && changedFrom(ex, { pack: det.pack, unit: det.unit, uqty: det.qty, cat: det.category })) {
+      EDITS = EDITS.filter(e => !(e.store === st && e.item === name)).concat([Object.assign({ store: st, item: name }, det)]); edited++;
+    }
+    if (have.has(sig(st, name, date, price))) { dup++; return; }
+    have.add(sig(st, name, date, price));
+    PENDING.push(Object.assign({ id: uid(), who: SET.who || "", store: st, item: name, price, date }, ex ? {} : { newItem: det }));
+    addAlias(r.desc, st, name); added++;
+  });
+  const ok = LS.set("gi2_pending", PENDING); LS.set("gi2_alias", ALIASES); LS.set("gi2_edits", EDITS);
+  $("#rdlg").close(); recalc();
+  toast((ok ? "" : "Could not save on this phone. ") + "Added " + added + (added === 1 ? " price" : " prices") + (edited ? ", " + edited + (edited === 1 ? " item changed" : " items changed") : "") + (dup ? ", " + dup + " already logged" : "") + ". Tap Upload when you have signal.");
+}
+
 // ---- events ----
 $("#q").addEventListener("input", e => { q = e.target.value; apply(); });
 $("#clr").addEventListener("click", () => { q = ""; $("#q").value = ""; apply(); $("#q").focus(); });
 $("#sort").addEventListener("change", e => { sort = e.target.value; apply(); });
+$("#scan").addEventListener("click", () => { $("#rfile").value = ""; $("#rfile").click(); });
+$("#rfile").addEventListener("change", e => { const f = e.target.files && e.target.files[0]; if (f) runScan(f); });
+$("#r-cancel").addEventListener("click", () => { scanAbort = true; try { if (scanWorker) scanWorker.terminate(); } catch (e) {} scanWorker = null; $("#rdlg").close(); });
+$("#r-close").addEventListener("click", () => $("#rdlg").close());
+$("#r-add").addEventListener("click", addReceipt);
+$("#r-date").addEventListener("change", e => { RS.date = e.target.value; });
+$("#r-store").addEventListener("change", e => { RS.store = e.target.value; fillRows(ReceiptLib.analyse(RS.text, ctx(RS.store.trim()))); });
+function refreshRow(row, r) {
+  row.querySelector(".rtag").textContent = tagText(r);
+  row.querySelector(".rcalc").innerHTML = calcHtml(r);
+  row.querySelector(".rhelp").innerHTML = helpHtml(r);
+}
+$("#r-rows").addEventListener("input", e => {
+  const row = e.target.closest(".rrow"); if (!row) return;
+  const r = RS.rows[+row.dataset.i], cl = e.target.classList;
+  if (cl.contains("ri")) {
+    const v = e.target.value, st = RS.store.trim(); r.item = canon(st, v) || v; r.isNew = !canon(st, v);
+    // Choosing another item from your list loads that item's pack and unit. Going back to a new name restores the receipt's own suggestion.
+    const d = detailsFor(r);
+    if (d.existing || r.existing) { Object.assign(r, d); row.querySelector(".rk-pack").value = r.pack; row.querySelector(".rk-qty").value = r.uqty; row.querySelector(".rk-cat").value = r.cat || ""; row.querySelector(".rk-unit").innerHTML = unitOptions(r.unit); }
+    r.existing = d.existing;
+    if (!r.on && r.price > 0) { r.on = true; row.querySelector(".rc").checked = true; }
+    refreshRow(row, r);
+  } else if (cl.contains("rp")) {
+    const v = parseFloat(e.target.value); r.price = isNaN(v) ? null : v;
+    if (!r.on && v > 0) { r.on = true; row.querySelector(".rc").checked = true; }
+    row.querySelector(".rcalc").innerHTML = calcHtml(r);
+  } else if (cl.contains("rk-pack")) { r.pack = e.target.value; row.querySelector(".rhelp").innerHTML = helpHtml(r); }
+  else if (cl.contains("rk-qty")) { r.uqty = e.target.value; row.querySelector(".rcalc").innerHTML = calcHtml(r); row.querySelector(".rhelp").innerHTML = helpHtml(r); }
+  else if (cl.contains("rk-cat")) { r.cat = e.target.value; row.querySelector(".rhelp").innerHTML = helpHtml(r); }
+  updateAdd();
+});
+$("#r-rows").addEventListener("change", e => {
+  const row = e.target.closest(".rrow"); if (!row) return;
+  const r = RS.rows[+row.dataset.i];
+  if (e.target.classList.contains("rc")) { r.on = e.target.checked; updateAdd(); }
+  else if (e.target.classList.contains("rk-unit")) { r.unit = e.target.value; row.querySelector(".rcalc").innerHTML = calcHtml(r); row.querySelector(".rhelp").innerHTML = helpHtml(r); }
+});
+$("#r-rows").addEventListener("click", e => {
+  const b = e.target.closest(".rdet"); if (!b) return;
+  const row = b.closest(".rrow"), r = RS.rows[+row.dataset.i];
+  r.open = !r.open; row.querySelector(".rdetails").hidden = !r.open;
+  b.textContent = r.open ? "Hide details" : "Edit details"; b.setAttribute("aria-expanded", r.open ? "true" : "false");
+});
 $("#stores").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; store = b.dataset.s; chips(); apply(); });
-$("#cats").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; cat = b.dataset.c; chips(); apply(); });
+$("#cats").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  if (b.dataset.pop) { popOnly = !popOnly; if (popOnly) { sort = "pop"; $("#sort").value = "pop"; } }
+  else cat = b.dataset.c;
+  chips(); apply();
+});
 $("#list").addEventListener("click", e => {
   const c = e.target.closest(".card"); if (!c) return;
   if (e.target.closest(".save")) { savePrice(c); return; }
@@ -460,14 +1570,19 @@ $("#list").addEventListener("input", e => {
 $("#up").addEventListener("click", sync);
 $("#gear").addEventListener("click", openSettings);
 $("#s-save").addEventListener("click", saveSettings);
+$("#s-copy").addEventListener("click", copyLink);
+$("#s-out").addEventListener("click", signOut);
 $("#newbtn").addEventListener("click", openNew);
 $("#nf").addEventListener("submit", submitNew);
 window.addEventListener("online", () => { updateTop(); });
 window.addEventListener("offline", updateTop);
 
 // ---- start ----
+const linked = applySetupLink();
 loadLocal(); recalc();
+if (linked) toast("Signed in on this phone");
 if (configured() && navigator.onLine) refresh();
+restore().then(() => { if (api() && !SET.key && !$("#setdlg").open) openSettings(); });
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
 </body>
