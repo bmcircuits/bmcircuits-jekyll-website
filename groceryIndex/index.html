@@ -68,7 +68,8 @@ h1{font-size:18px;margin:0}
 .chk label{display:block;color:var(--mut);font-size:13px;margin-bottom:4px}
 .add{display:flex;gap:6px;flex-wrap:wrap}
 .add input{font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);min-width:0}
-.add .pin{flex:1 1 90px}
+.add .pin{flex:1 1 80px}
+.add .psz{flex:1 1 70px}
 .add .pdt{flex:1 1 150px}
 .verdict{margin-top:8px;font-weight:600;min-height:1.2em}
 .empty{text-align:center;color:var(--mut);padding:40px 0}
@@ -104,6 +105,7 @@ dialog .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
 #rdlg .ri{flex:1 1 auto;min-width:0;padding:8px 10px}
 #rdlg .rp{width:5.4em;flex:none;text-align:right;padding:8px}
 .rsub{font-size:12px;color:var(--mut);margin:3px 0 0 30px;display:flex;gap:8px;flex-wrap:wrap}
+.rul:empty{display:none}
 .rtag{font-weight:700;color:var(--acc)}
 .rnote{font-size:12px;color:var(--warn);font-weight:600;margin:3px 0 0 30px}
 .rnew{font-size:12px;color:var(--mut);margin:4px 0 0 30px;display:flex;gap:6px;align-items:center}
@@ -395,6 +397,26 @@ const ReceiptLib = (function () {
     if (pk && pk.k === "ml") return { category, pack: pk.v >= 1000 ? +(pk.v / 1000).toFixed(3) + "L" : pk.v + "ml", unit: "L", qty: +(pk.v / 1000).toFixed(4) };
     if (pk && pk.k === "n") return { category, pack: pk.v + " pack", unit: countUnit(name, pk.v), qty: pk.v };
     return { category, pack: "each", unit: "ea", qty: 1 };
+  }
+
+  // How much of the item's unit is in this purchase. A 5 pack of lemons, 0.12 kg each, is 0.6 kg; a 1.5kg bag of potatoes is 1.5.
+  // item: {unit, qty (usual pack), each (what one piece weighs or holds, in the item's unit)}
+  function sizeFor(pk, it) {
+    const unit = it.unit, each = Number(it.each) || 0, usual = Number(it.qty) || null;
+    if (!unit) return { size: usual, how: "usual" };
+    const mass = unit === "kg", vol = unit === "L", h = unit === "100g", count = !mass && !vol && !h;
+    const alts = pk ? (pk.alts || [pk]) : [];
+    for (const a of alts) {
+      let v = null, how = "receipt";
+      if (a.k === "perkg") v = mass ? 1 : null;
+      else if (a.k === "g") v = mass ? a.v / 1000 : h ? a.v / 100 : null;
+      else if (a.k === "ml") v = vol ? a.v / 1000 : null;
+      else if (a.k === "n") { v = count ? a.v : (each ? a.v * each : null); if (!count) how = "each"; }
+      else if (a.k === "ea") { v = count ? 1 : (each || null); if (!count) how = "each"; }
+      if (v != null && v > 0) return { size: Math.round(v * 10000) / 10000, how, n: a.k === "n" ? a.v : a.k === "ea" ? 1 : null };
+    }
+    if (alts.some(a => a.k === "n" || a.k === "ea") && !count && !each) return { size: null, how: "needEach" };
+    return { size: usual, how: "usual" };
   }
 
   // ---- reading amounts on a line ----
@@ -757,9 +779,11 @@ const ReceiptLib = (function () {
         const sc = score(rt, c.t);
         if (sc >= 0.8 && sc >= bs - 0.001) { const hit = pool.find(x => x.i.item === c.a.item); if (hit) { bs = Math.max(sc, bs); best = hit; viaAlias = true; } }
       });
-      let compat = best ? packCompat(pk, best.pk) : true;
-      // A per-kg item bought as a bunch or a pack is not the same thing as a price per kg.
-      if (best && compat && best.pk && best.pk.k === "perkg" && it.rate == null && !it.weighed && /\b(bunch|each|ea|pk|pack)\b|\bp\/p\b/i.test(it.desc)) compat = false;
+      // What the purchase contains, in the unit the matched item is compared by. Different pack sizes of the same item are fine.
+      const sz = best ? sizeFor(pk, best.i) : null;
+      let compat = best ? (packCompat(pk, best.pk) || (sz && sz.how !== "usual")) : true;
+      // A per-kg item bought as a bunch or a pack is not the same thing as a price per kg, unless one piece's weight is known.
+      if (best && compat && best.pk && best.pk.k === "perkg" && it.rate == null && !it.weighed && sz && sz.how === "usual" && /\b(bunch|each|ea|pk|pack)\b|\bp\/p\b/i.test(it.desc)) compat = false;
       // An identical pack size (500g and 500g, say) is extra evidence the two are the same product.
       const bonus = best && compat && pk && best.pk && (pk.k === "g" || pk.k === "ml" || pk.k === "n") ? 0.15 : 0;
       const eff = Math.min(1, bs + bonus);
@@ -770,7 +794,8 @@ const ReceiptLib = (function () {
       else if (best && eff >= 0.85) status = "maybe";
       const name = pretty(it.desc) || it.desc;
       // Sold by weight, but no weight line was read: the line total is not a price per kg, so ask for it.
-      const weighed = it.rate == null && (it.weighed || !!(best && (status === "auto" || status === "alias") && best.pk && best.pk.k === "perkg"));
+      // A per-kg item with a pack size on the receipt (a 500g zucchini) is a pack price, not a weight price.
+      const weighed = it.rate == null && (it.weighed || !!(best && (status === "auto" || status === "alias") && best.pk && best.pk.k === "perkg" && !(sz && sz.how !== "usual" && !(pk && pk.k === "perkg"))));
       const net = it.amount != null ? round2(it.amount - (it.discount || 0)) : null;
       let price = null, note = [];
       if (it.rate != null) price = it.rate;
@@ -783,21 +808,33 @@ const ReceiptLib = (function () {
       }
       if (it.discountUnread) note.push("A discount line under this item could not be read. Check the price.");
       if (best && status !== "new" && !compat) note.push("Pack differs: " + (it.rate != null ? "sold per kg" : "this receipt says " + (it.desc.match(/\d[\d.]*\s?(?:x\s?\d[\d.]*\s?)?(?:kg|g|ml|l|pk)\b|\bea\b|\beach\b/i) || ["a different pack"])[0].replace(/\s+/g, "")) + ", your list has " + best.i.pack + ".");
+      const mi0 = best && status !== "new" ? best.i : null;
+      let size = null, info = [], needEach = false;
+      if (mi0 && sz) {
+        size = sz.size;
+        if (sz.how === "needEach") {
+          needEach = true;
+          note.push(mi0.item + " is compared " + (mi0.unit === "L" ? "per L" : "per " + mi0.unit) + ", but this line is counted, not weighed. Under Edit details, enter what one piece " + (mi0.unit === "L" ? "holds" : "weighs") + " (in " + mi0.unit + ").");
+        } else if (sz.how === "each") info.push((sz.n || 1) + " x " + mi0.each + " " + mi0.unit + " each = " + size + " " + mi0.unit);
+        else if (sz.how === "receipt" && mi0.qty && Math.abs(size - Number(mi0.qty)) > 1e-9) info.push("Pack is " + size + " " + mi0.unit + " here (usual " + mi0.qty + ")");
+      }
       if (it.amount == null) note.push("Price was unreadable. Check it.");
       else if (it.digitFix) note.push("Price looked misread (" + money2(it.was) + "). Changed to " + money2(it.amount) + " so the receipt adds up. Check it.");
       else if (it.inferred) note.push("Price was unreadable and was worked out. Check it.");
       if (it.suggest && it.suggest.length) note.push("Might be misread. If so, " + it.suggest.slice(0, 2).map(money2).join(" or ") + " would make the receipt add up.");
       const ni = newItemFor(pk, name, weighed || it.rate != null);
       const mi = best && status !== "new" ? best.i : null;
+      if (!mi) size = ni.qty;
       return {
         raw: it.raw, desc: it.desc, qty: it.qty, amount: it.amount, weighed, hasRate: it.rate != null,
         status, matched: best ? best.i.item : null, perkg: !!(best && best.pk && best.pk.k === "perkg"), avg: best ? best.i.avg || null : null, score: Math.round(bs * 100) / 100, compat,
         item: (status === "new" || !best) ? name : best.i.item,
         category: mi ? mi.category : guessCategory(name),
         newItem: ni,
-        cur: mi ? { category: mi.category || "", pack: mi.pack || "", unit: mi.unit || "", qty: mi.qty == null ? "" : mi.qty } : null,
+        cur: mi ? { category: mi.category || "", pack: mi.pack || "", unit: mi.unit || "", qty: mi.qty == null ? "" : mi.qty, each: mi.each == null ? "" : mi.each } : null,
+        pk: pk ? { alts: pk.alts || [pk] } : null, size, info, needEach,
         price, note, discount: it.discount || 0, fixed: !!it.fixed,
-        on: (status === "auto" || status === "alias") && price != null
+        on: (status === "auto" || status === "alias") && price != null && !needEach
       };
     });
     // The same product on two lines at the same price (Costco prints each one separately) becomes one row.
@@ -889,7 +926,7 @@ const ReceiptLib = (function () {
     return base;
   }
 
-  return { rank, consensus, parse, analyse, parsePack, packCompat, tokens, score, pretty, guessCategory, newItemFor };
+  return { sizeFor, rank, consensus, parse, analyse, parsePack, packCompat, tokens, score, pretty, guessCategory, newItemFor };
 })();
 if (typeof module !== "undefined" && module.exports) module.exports = ReceiptLib;
 
@@ -971,11 +1008,11 @@ function loadLocal() {
 function build() {
   const items = new Map();
   ITEMS.forEach(i => items.set(key(i.store, i.item), { store: i.store, category: i.category || "Other", item: i.item, pack: i.pack || "",
-    unit: i.unit || "", qty: Number(i.qty) || 0, note: i.note || "", check: i.check, pts: [] }));
+    unit: i.unit || "", qty: Number(i.qty) || 0, each: Number(i.each) || 0, note: i.note || "", check: i.check, pts: [] }));
   PENDING.forEach(p => {
     if (!items.has(key(p.store, p.item)) && p.newItem)
       items.set(key(p.store, p.item), { store: p.store, category: p.newItem.category || "Other", item: p.item, pack: p.newItem.pack || "",
-        unit: p.newItem.unit || "", qty: Number(p.newItem.qty) || 0, note: "", check: "", pts: [] });
+        unit: p.newItem.unit || "", qty: Number(p.newItem.qty) || 0, each: Number(p.newItem.each) || 0, note: "", check: "", pts: [] });
   });
   EDITS.forEach(ed => {
     const x = items.get(key(ed.store, ed.item)); if (!x) return;
@@ -983,14 +1020,15 @@ function build() {
     if (ed.pack) x.pack = ed.pack;
     if (ed.unit) x.unit = ed.unit;
     if (ed.qty !== "" && ed.qty != null && !isNaN(Number(ed.qty))) x.qty = Number(ed.qty);
+    if (ed.each !== "" && ed.each != null && !isNaN(Number(ed.each))) x.each = Number(ed.each);
   });
-  const add = (s, it, date, price, pending) => {
+  const add = (s, it, date, price, pending, size) => {
     const e = items.get(key(s, it)); if (!e) return;
     const t = new Date(date + "T00:00:00").getTime(); if (isNaN(t)) return;
-    e.pts.push({ d: date, t, p: Number(price), pending });
+    e.pts.push({ d: date, t, p: Number(price), s: Number(size) > 0 ? Number(size) : null, pending });
   };
-  LOG.forEach(l => add(l.store, l.item, l.date, l.price, false));
-  PENDING.forEach(p => add(p.store, p.item, p.date, p.price, true));
+  LOG.forEach(l => add(l.store, l.item, l.date, l.price, false, l.size));
+  PENDING.forEach(p => add(p.store, p.item, p.date, p.price, true, p.size));
   BYNK = new Map();
   items.forEach(e => {
     e.pts.sort((a, b) => a.t - b.t);
@@ -999,8 +1037,14 @@ function build() {
       const ps = e.pts.map(x => x.p);
       e.avg = ps.reduce((a, b) => a + b, 0) / n; e.last = e.pts[n - 1]; e.min = Math.min(...ps); e.max = Math.max(...ps);
     }
-    e.up = n && e.qty > 0 && e.unit ? e.avg / e.qty : null;
-    e.delta = n > 1 ? (e.last.p - e.avg) / e.avg : 0;
+    // Every price is turned into a price per unit using the size of that purchase, or the item's usual pack when none was recorded.
+    e.pts.forEach(x => { const sz = x.s || e.qty; x.u = e.unit && sz > 0 ? x.p / sz : null; });
+    const us = e.pts.filter(x => x.u != null);
+    if (us.length) {
+      e.up = us.reduce((a, x) => a + x.u, 0) / us.length; e.upMin = Math.min(...us.map(x => x.u)); e.upMax = Math.max(...us.map(x => x.u));
+      e.upLast = us[us.length - 1].u;
+      e.delta = us.length > 1 ? (e.upLast - e.up) / e.up : 0;
+    } else { e.up = null; e.delta = n > 1 ? (e.last.p - e.avg) / e.avg : 0; }
     e.flag = e.check === true || String(e.check).toLowerCase() === "true" || String(e.check) === "1";
     e.nk = norm(e.item);
     if (!BYNK.has(e.nk)) BYNK.set(e.nk, []);
@@ -1065,21 +1109,32 @@ function chart(pts) {
     <text class="ax" x="${L}" y="${H - 6}">${mo(t0)}</text><text class="ax" x="${W - R}" y="${H - 6}" text-anchor="end">${mo(t1)}</text></svg>`;
 }
 
+const sizeLabel = u => ({ kg: "kg", L: "L", "100g": "x 100g", ea: "items", egg: "eggs", can: "cans", roll: "rolls", tablet: "tablets", capsule: "capsules", sachet: "sachets", bag: "bags", box: "boxes" })[u] || u || "units";
+const isMeasure = u => u === "kg" || u === "L" || u === "100g";
 function moreHtml(e) {
   const n = e.pts.length;
   const kv = (a, b) => `<div class="kv"><span>${a}</span><span>${b}</span></div>`;
   let h = "";
   if (n) {
-    h += kv("Average pack price", money(e.avg));
-    h += kv("Last paid", money(e.last.p) + " on " + fmtD(e.last.d) + (e.last.pending ? " (not uploaded)" : ""));
-    if (e.up != null) h += kv("Last paid " + unitLabel(e.unit), money(e.last.p / e.qty));
-    h += kv("Lowest / highest", money(e.min) + " / " + money(e.max));
+    const sz = x => x.s ? " for " + x.s + " " + sizeLabel(e.unit) : "";
+    if (e.up != null) {
+      h += kv("Average " + unitLabel(e.unit), money(e.up));
+      h += kv("Last paid", money(e.last.p) + sz(e.last) + " on " + fmtD(e.last.d) + (e.last.pending ? " (not uploaded)" : ""));
+      if (e.last.u != null) h += kv("Last paid " + unitLabel(e.unit), money(e.last.u));
+      h += kv("Lowest / highest " + unitLabel(e.unit), money(e.upMin) + " / " + money(e.upMax));
+      h += kv("Average paid per pack", money(e.avg));
+    } else {
+      h += kv("Average price", money(e.avg));
+      h += kv("Last paid", money(e.last.p) + " on " + fmtD(e.last.d) + (e.last.pending ? " (not uploaded)" : ""));
+      h += kv("Lowest / highest", money(e.min) + " / " + money(e.max));
+    }
     h += kv("Prices logged", n);
   } else h += `<div class="meta">No prices logged yet.</div>`;
   if (e.note) h += `<div class="meta" style="margin-top:6px">${esc(e.note)}</div>`;
-  h += chart(e.pts);
-  h += `<div class="chk"><label>Shelf price for this pack ($)</label>
+  h += chart(e.up != null ? e.pts.map(x => Object.assign({}, x, { p: x.u != null ? x.u : x.p })) : e.pts);
+  h += `<div class="chk"><label>Shelf price ($)${e.unit ? " and what the pack contains (" + esc(sizeLabel(e.unit)) + ")" : ""}</label>
     <div class="add"><input class="pin" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" aria-label="Shelf price">
+    ${e.unit ? `<input class="psz" type="number" inputmode="decimal" step="any" min="0" value="${e.qty || ""}" aria-label="Pack size in ${esc(sizeLabel(e.unit))}">` : ""}
     <input class="pdt" type="date" value="${today()}" aria-label="Date"><button class="btn pri save" type="button">Save price</button></div>
     <div class="verdict"></div></div>`;
   return h;
@@ -1116,8 +1171,8 @@ function updateTop() {
 function recalc() { build(); chips(); apply(); updateTop(); }
 
 // ---- adding prices ----
-function addPending(p, newItem) {
-  PENDING.push(Object.assign({ id: uid(), who: SET.who || "" }, p, newItem ? { newItem } : {}));
+function addPending(p, newItem, size) {
+  PENDING.push(Object.assign({ id: uid(), who: SET.who || "" }, p, size ? { size } : {}, newItem ? { newItem } : {}));
   const ok = LS.set("gi2_pending", PENDING);
   recalc();
   toast(ok ? "Saved on this phone (" + PENDING.length + " waiting to upload)" : "Could not save on this phone. Storage may be full or blocked.");
@@ -1128,7 +1183,8 @@ function savePrice(card) {
   const v = parseFloat(card.querySelector(".pin").value);
   const date = card.querySelector(".pdt").value || today();
   if (isNaN(v) || v <= 0) { toast("Type the shelf price first"); return; }
-  addPending({ store: e.store, item: e.item, price: Math.round(v * 100) / 100, date });
+  const szEl = card.querySelector(".psz"), sz = szEl ? parseFloat(szEl.value) : NaN;
+  addPending(Object.assign({ store: e.store, item: e.item, price: Math.round(v * 100) / 100, date }, sz > 0 ? { size: sz } : {}));
 }
 
 // ---- sync ----
@@ -1163,8 +1219,8 @@ async function sync() {
     const sent = PENDING.slice(), sentAl = ALIASES.filter(a => a.isNew), sentEd = EDITS.slice();
     const body = sent.length || sentAl.length || sentEd.length
       ? { action: "add",
-          updates: sentEd.map(e => ({ store: e.store, item: e.item, category: e.category, pack: e.pack, unit: e.unit, qty: e.qty })),
-          entries: sent.map(p => ({ id: p.id, date: p.date, store: p.store, item: p.item, price: p.price, who: p.who })),
+          updates: sentEd.map(e => ({ store: e.store, item: e.item, category: e.category, pack: e.pack, unit: e.unit, qty: e.qty, each: e.each })),
+          entries: sent.map(p => ({ id: p.id, date: p.date, store: p.store, item: p.item, price: p.price, who: p.who, size: p.size })),
           items: sent.filter(p => p.newItem).map(p => Object.assign({ store: p.store, item: p.item }, p.newItem)),
           aliases: sentAl.map(a => ({ text: a.text, store: a.store, item: a.item, who: SET.who || "" })) }
       : { action: "read" };
@@ -1252,7 +1308,8 @@ function submitNew(ev) {
   if (!s || !it || isNaN(pr) || pr <= 0) { toast("Store, item and price are needed"); return; }
   if (STAT.has(key(s, it))) { toast("That item already exists for " + s + ". Search for it and save a price."); return; }
   addPending({ store: s, item: it, price: Math.round(pr * 100) / 100, date: String(f.get("date") || today()) },
-    { category: String(f.get("category") || "").trim() || "Other", pack: String(f.get("pack") || "").trim(), unit: String(f.get("unit") || "ea"), qty: isNaN(qty) ? "" : qty });
+    { category: String(f.get("category") || "").trim() || "Other", pack: String(f.get("pack") || "").trim(), unit: String(f.get("unit") || "ea"), qty: isNaN(qty) ? "" : qty, each: "" },
+    qty > 0 ? qty : null);
   $("#nf").reset(); $("#newdlg").close();
   q = it; $("#q").value = it; apply();
 }
@@ -1262,7 +1319,7 @@ let scanAbort = false, scanWorker = null, RS = null;
 
 function ctx(store) {
   return { store: store || null, aliases: ALIASES,
-    items: [...STAT.values()].map(e => ({ store: e.store, item: e.item, pack: e.pack, unit: e.unit, qty: e.qty, category: e.category, avg: e.avg })) };
+    items: [...STAT.values()].map(e => ({ store: e.store, item: e.item, pack: e.pack, unit: e.unit, qty: e.qty, each: e.each, category: e.category, avg: e.avg })) };
 }
 function canon(st, name) {
   const n = String(name || "").trim().toLowerCase(); if (!n) return null;
@@ -1411,29 +1468,54 @@ function unitOptions(cur) {
   const list = UNITS.slice(); if (cur && !list.some(u => u[0] === cur)) list.push([cur, "per " + cur]);
   return list.map(([v, l]) => `<option value="${esc(v)}"${v === cur ? " selected" : ""}>${esc(l)}</option>`).join("");
 }
-// The pack, unit and category an item starts with in the editor: its entry in your list if it has one, otherwise what the receipt suggests.
+// What a scanned row starts with in the editor: the item's entry in your list if it has one, otherwise what the receipt suggests.
 function detailsFor(r) {
   const ex = STAT.get(key(RS.store.trim(), r.item));
-  if (ex) return { cat: ex.category || "", pack: ex.pack || "", unit: ex.unit || "", uqty: ex.qty || "", existing: true };
+  if (ex) return { cat: ex.category || "", pack: ex.pack || "", unit: ex.unit || "", each: ex.each || "", usual: ex.qty || "", existing: true };
   const n = r.newItem || {};
-  return { cat: r.cat || n.category || "", pack: n.pack || "", unit: n.unit || "ea", uqty: n.qty == null ? "" : n.qty, existing: false };
+  return { cat: r.cat || n.category || "", pack: n.pack || "", unit: n.unit || "ea", each: "", usual: "", existing: false };
+}
+// How much of the item's unit this purchase holds. For a list item it is worked out from the receipt (a 5 pack x 0.12 kg is 0.6 kg).
+function recomputeSize(r) {
+  if (r.sizeManual) return;
+  if (r.existing) { const z = ReceiptLib.sizeFor(r.pk, { unit: r.unit, qty: r.usual, each: r.each }); r.size = z.size; r.needEach = z.how === "needEach"; }
+  else { r.needEach = false; if (r.newItem && r.newItem.qty !== "" && r.newItem.qty != null) r.size = r.newItem.qty; }
 }
 const same = (a, b) => String(a == null ? "" : a).trim() === String(b == null ? "" : b).trim();
-function changedFrom(ex, r) {
-  return !same(r.pack, ex.pack) || !same(r.unit, ex.unit) || !same(r.uqty, ex.qty || "") || !same(r.cat, ex.category);
-}
+// Only what belongs to the item changes the list: category, unit and what one piece weighs. The size belongs to this purchase.
+function changedFrom(ex, r) { return !same(r.cat, ex.category) || !same(r.unit, ex.unit) || !same(r.each, ex.each || ""); }
 function calcHtml(r) {
-  const q = Number(r.uqty), ex = STAT.get(key(RS.store.trim(), r.item));
-  if (!(r.price > 0) || !(q > 0) || !r.unit) return "Fill in the price, units in pack and compare by to see the price per unit.";
-  const up = r.price / q;
-  let t = "Works out at <b>" + money(up) + " " + esc(unitLabel(r.unit)) + "</b>";
+  const q = Number(r.size), ex = STAT.get(key(RS.store.trim(), r.item));
+  if (r.needEach && !(q > 0)) return "Enter what one piece " + (r.unit === "L" ? "holds" : "weighs") + " below to work out the price per " + esc(r.unit) + ".";
+  if (!(r.price > 0) || !(q > 0) || !r.unit) return "Enter the price and what this pack contains to see the price per unit.";
+  let t = "Works out at <b>" + money(r.price / q) + " " + esc(unitLabel(r.unit)) + "</b>";
   if (ex && ex.up != null && ex.unit === r.unit) t += " (your average is " + money(ex.up) + ")";
   return t;
 }
 function helpHtml(r) {
   const ex = STAT.get(key(RS.store.trim(), r.item));
   if (!ex) return r.item.trim() ? "New item: it is added to your list when you upload." : "";
-  return changedFrom(ex, r) ? "This changes the item in your list when you upload." : "In your list: " + esc(ex.pack || "no pack") + ", compared " + esc(unitLabel(ex.unit)) + ".";
+  return changedFrom(ex, r) ? "This changes the item in your list when you upload." : "In your list: usual pack " + esc(ex.pack || "not set") + ", compared " + esc(unitLabel(ex.unit)) + ".";
+}
+function unitLine(r) {
+  const q = Number(r.size);
+  if (!(q > 0) || !r.unit) return "";
+  return esc(q + " " + sizeLabel(r.unit)) + (r.price > 0 ? " &middot; " + money(r.price / q) + " " + esc(unitLabel(r.unit)) : "");
+}
+function detailsHtml(r) {
+  return `<div class="rdetails"${r.open ? "" : " hidden"}>
+      <div class="two">
+        <div><label class="rl-size">This pack contains (${esc(sizeLabel(r.unit))})</label><input class="rk-size" type="number" inputmode="decimal" step="any" min="0" value="${esc(r.size == null ? "" : r.size)}"></div>
+        <div><label>Compare by</label><select class="rk-unit">${unitOptions(r.unit)}</select></div>
+      </div>
+      <div class="two">
+        <div class="rk-each-wrap"${isMeasure(r.unit) ? "" : " hidden"}><label>One piece ${r.unit === "L" ? "holds" : "weighs"} (${esc(r.unit)})</label><input class="rk-each" type="number" inputmode="decimal" step="any" min="0" value="${esc(r.each)}" placeholder="${r.unit === "L" ? "e.g. 0.25" : "e.g. 0.12"}"></div>
+        <div><label>Category</label><input class="rk-cat" list="dl-cat" value="${esc(r.cat || "")}" autocomplete="off"></div>
+      </div>
+      ${r.existing ? "" : `<div class="two"><div><label>Pack label</label><input class="rk-pack" value="${esc(r.pack)}" placeholder="500g" autocomplete="off" autocapitalize="none"></div></div>`}
+      <div class="rcalc">${calcHtml(r)}</div>
+      <div class="help rhelp">${helpHtml(r)}</div>
+    </div>`;
 }
 function rowHtml(r, i) {
   r.isNew = !canon(RS.store.trim(), r.item);
@@ -1443,20 +1525,10 @@ function rowHtml(r, i) {
       <input class="ri" list="dl-ritems" value="${esc(r.item)}" aria-label="Item" autocomplete="off" autocapitalize="none" spellcheck="false">
       <input class="rp" type="number" inputmode="decimal" step="0.01" min="0" value="${r.price != null ? r.price.toFixed(2) : ""}" placeholder="${r.weighed || r.hasRate ? "$/kg" : "$"}" aria-label="Price"></div>
     <div class="rsub"><span>${esc(r.desc)}${r.qty > 1 ? " &middot; " + r.qty + " bought" : ""}</span><span class="rtag">${tagText(r)}</span></div>
+    <div class="rsub rul">${unitLine(r)}</div>
     ${notes}
     <button class="rdet" type="button" aria-expanded="${r.open ? "true" : "false"}">${r.open ? "Hide details" : "Edit details"}</button>
-    <div class="rdetails"${r.open ? "" : " hidden"}>
-      <div class="two">
-        <div><label>Pack size</label><input class="rk-pack" value="${esc(r.pack)}" placeholder="500g" autocomplete="off" autocapitalize="none"></div>
-        <div><label>Compare by</label><select class="rk-unit">${unitOptions(r.unit)}</select></div>
-      </div>
-      <div class="two">
-        <div><label>Units in pack</label><input class="rk-qty" type="number" inputmode="decimal" step="any" min="0" value="${esc(r.uqty)}"></div>
-        <div><label>Category</label><input class="rk-cat" list="dl-cat" value="${esc(r.cat || "")}" autocomplete="off"></div>
-      </div>
-      <div class="rcalc">${calcHtml(r)}</div>
-      <div class="help rhelp">${helpHtml(r)}</div>
-    </div>
+    ${detailsHtml(r)}
   </div>`;
 }
 const tagText = r => r.isNew ? "New item" : (r.status === "maybe" && r.item === r.matched ? "Check this match" : "");
@@ -1476,24 +1548,26 @@ function addReceipt() {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { toast("Check the date"); return; }
   const have = new Set(), sig = (s, i, d, p) => [s, i, d, Number(p).toFixed(2)].join("|");
   LOG.forEach(l => have.add(sig(l.store, l.item, l.date, l.price))); PENDING.forEach(p => have.add(sig(p.store, p.item, p.date, p.price)));
-  let added = 0, dup = 0, edited = 0;
+  let added = 0, dup = 0, edited = 0, nosize = 0;
   RS.rows.forEach(r => {
     if (!r.on || !(r.price > 0) || !r.item.trim()) return;
     const name = canon(st, r.item) || r.item.trim(), price = Math.round(r.price * 100) / 100, ex = STAT.get(key(st, name));
-    const q = String(r.uqty).trim() === "" || isNaN(Number(r.uqty)) ? "" : Number(r.uqty);
-    const det = { category: (r.cat || "").trim() || "Other", pack: (r.pack || "").trim(), unit: r.unit || "ea", qty: q };
-    // Item details changed in the editor go to the sheet as an update to that item, but only if something really changed.
-    if (ex && changedFrom(ex, { pack: det.pack, unit: det.unit, uqty: det.qty, cat: det.category })) {
-      EDITS = EDITS.filter(e => !(e.store === st && e.item === name)).concat([Object.assign({ store: st, item: name }, det)]); edited++;
+    const size = Number(r.size) > 0 ? Number(r.size) : null;
+    if (r.needEach && !size) { nosize++; return; }
+    const eachV = String(r.each).trim() === "" || isNaN(Number(r.each)) ? "" : Number(r.each);
+    const det = { category: (r.cat || "").trim() || "Other", pack: (r.pack || "").trim(), unit: r.unit || "ea", qty: size == null ? "" : size, each: eachV };
+    // Changes to the item itself (category, unit, what one piece weighs) go to the sheet as an update, but only if something really changed.
+    if (ex && changedFrom(ex, { cat: det.category, unit: det.unit, each: eachV })) {
+      EDITS = EDITS.filter(e => !(e.store === st && e.item === name)).concat([{ store: st, item: name, category: det.category, unit: det.unit, each: eachV }]); edited++;
     }
     if (have.has(sig(st, name, date, price))) { dup++; return; }
     have.add(sig(st, name, date, price));
-    PENDING.push(Object.assign({ id: uid(), who: SET.who || "", store: st, item: name, price, date }, ex ? {} : { newItem: det }));
+    PENDING.push(Object.assign({ id: uid(), who: SET.who || "", store: st, item: name, price, date }, size ? { size } : {}, ex ? {} : { newItem: det }));
     addAlias(r.desc, st, name); added++;
   });
   const ok = LS.set("gi2_pending", PENDING); LS.set("gi2_alias", ALIASES); LS.set("gi2_edits", EDITS);
   $("#rdlg").close(); recalc();
-  toast((ok ? "" : "Could not save on this phone. ") + "Added " + added + (added === 1 ? " price" : " prices") + (edited ? ", " + edited + (edited === 1 ? " item changed" : " items changed") : "") + (dup ? ", " + dup + " already logged" : "") + ". Tap Upload when you have signal.");
+  toast((ok ? "" : "Could not save on this phone. ") + "Added " + added + (added === 1 ? " price" : " prices") + (edited ? ", " + edited + (edited === 1 ? " item changed" : " items changed") : "") + (dup ? ", " + dup + " already logged" : "") + (nosize ? ". " + nosize + " left out: weight of one piece needed" : "") + ". Tap Upload when you have signal.");
 }
 
 // ---- events ----
@@ -1509,26 +1583,37 @@ $("#r-date").addEventListener("change", e => { RS.date = e.target.value; });
 $("#r-store").addEventListener("change", e => { RS.store = e.target.value; fillRows(ReceiptLib.analyse(RS.text, ctx(RS.store.trim()))); });
 function refreshRow(row, r) {
   row.querySelector(".rtag").textContent = tagText(r);
+  row.querySelector(".rul").innerHTML = unitLine(r);
   row.querySelector(".rcalc").innerHTML = calcHtml(r);
   row.querySelector(".rhelp").innerHTML = helpHtml(r);
+}
+function renderDetails(row, r) {
+  const old = row.querySelector(".rdetails"), tmp = document.createElement("div");
+  tmp.innerHTML = detailsHtml(r); old.replaceWith(tmp.firstElementChild);
 }
 $("#r-rows").addEventListener("input", e => {
   const row = e.target.closest(".rrow"); if (!row) return;
   const r = RS.rows[+row.dataset.i], cl = e.target.classList;
   if (cl.contains("ri")) {
     const v = e.target.value, st = RS.store.trim(); r.item = canon(st, v) || v; r.isNew = !canon(st, v);
-    // Choosing another item from your list loads that item's pack and unit. Going back to a new name restores the receipt's own suggestion.
+    // Choosing another item from your list loads that item's unit and category and works the size out again. Going back to a new name restores the receipt's own suggestion.
     const d = detailsFor(r);
-    if (d.existing || r.existing) { Object.assign(r, d); row.querySelector(".rk-pack").value = r.pack; row.querySelector(".rk-qty").value = r.uqty; row.querySelector(".rk-cat").value = r.cat || ""; row.querySelector(".rk-unit").innerHTML = unitOptions(r.unit); }
-    r.existing = d.existing;
-    if (!r.on && r.price > 0) { r.on = true; row.querySelector(".rc").checked = true; }
+    if (d.existing || r.existing) { Object.assign(r, d, { existing: d.existing }); r.sizeManual = false; recomputeSize(r); renderDetails(row, r); }
+    else r.existing = false;
+    if (!r.on && r.price > 0 && !r.needEach) { r.on = true; row.querySelector(".rc").checked = true; }
     refreshRow(row, r);
   } else if (cl.contains("rp")) {
     const v = parseFloat(e.target.value); r.price = isNaN(v) ? null : v;
-    if (!r.on && v > 0) { r.on = true; row.querySelector(".rc").checked = true; }
-    row.querySelector(".rcalc").innerHTML = calcHtml(r);
-  } else if (cl.contains("rk-pack")) { r.pack = e.target.value; row.querySelector(".rhelp").innerHTML = helpHtml(r); }
-  else if (cl.contains("rk-qty")) { r.uqty = e.target.value; row.querySelector(".rcalc").innerHTML = calcHtml(r); row.querySelector(".rhelp").innerHTML = helpHtml(r); }
+    if (!r.on && v > 0 && !r.needEach) { r.on = true; row.querySelector(".rc").checked = true; }
+    row.querySelector(".rcalc").innerHTML = calcHtml(r); row.querySelector(".rul").innerHTML = unitLine(r);
+  } else if (cl.contains("rk-pack")) { r.pack = e.target.value; }
+  else if (cl.contains("rk-size")) { r.size = e.target.value === "" ? null : parseFloat(e.target.value); r.sizeManual = true; r.needEach = false; refreshRow(row, r); }
+  else if (cl.contains("rk-each")) {
+    r.each = e.target.value; const was = r.needEach; recomputeSize(r);
+    row.querySelector(".rk-size").value = r.size == null ? "" : r.size;
+    if (was && !r.needEach && r.price > 0 && !r.on) { r.on = true; row.querySelector(".rc").checked = true; }
+    refreshRow(row, r);
+  }
   else if (cl.contains("rk-cat")) { r.cat = e.target.value; row.querySelector(".rhelp").innerHTML = helpHtml(r); }
   updateAdd();
 });
@@ -1536,7 +1621,9 @@ $("#r-rows").addEventListener("change", e => {
   const row = e.target.closest(".rrow"); if (!row) return;
   const r = RS.rows[+row.dataset.i];
   if (e.target.classList.contains("rc")) { r.on = e.target.checked; updateAdd(); }
-  else if (e.target.classList.contains("rk-unit")) { r.unit = e.target.value; row.querySelector(".rcalc").innerHTML = calcHtml(r); row.querySelector(".rhelp").innerHTML = helpHtml(r); }
+  else if (e.target.classList.contains("rk-unit")) {
+    r.unit = e.target.value; recomputeSize(r); renderDetails(row, r); refreshRow(row, r); updateAdd();
+  }
 });
 $("#r-rows").addEventListener("click", e => {
   const b = e.target.closest(".rdet"); if (!b) return;
@@ -1560,12 +1647,15 @@ $("#list").addEventListener("click", e => {
   else { open.add(k); c.classList.add("open"); c.querySelector(".more").innerHTML = moreHtml(STAT.get(k)); }
 });
 $("#list").addEventListener("input", e => {
-  if (!e.target.classList.contains("pin")) return;
-  const c = e.target.closest(".card"), d = STAT.get(c.dataset.k), out = c.querySelector(".verdict"), v = parseFloat(e.target.value);
+  if (!e.target.classList.contains("pin") && !e.target.classList.contains("psz")) return;
+  const c = e.target.closest(".card"), d = STAT.get(c.dataset.k), out = c.querySelector(".verdict"), v = parseFloat(c.querySelector(".pin").value);
   if (isNaN(v) || !d || !d.pts.length) { out.textContent = ""; out.className = "verdict"; return; }
-  const p = (v - d.avg) / d.avg, pc = Math.round(Math.abs(p) * 100);
-  if (pc < 2) { out.textContent = "About your usual price (" + money(d.avg) + ")"; out.className = "verdict"; }
-  else { out.textContent = money(v) + " is " + pc + "% " + (p > 0 ? "above" : "below") + " your average of " + money(d.avg); out.className = "verdict " + (p > 0 ? "up" : "down"); }
+  // Compare per unit when the item has one, so a different pack size is allowed for.
+  const szEl = c.querySelector(".psz"), sz = szEl ? parseFloat(szEl.value) : NaN;
+  const perUnit = d.up != null && sz > 0, mine = perUnit ? v / sz : v, ref = perUnit ? d.up : d.avg;
+  const p = (mine - ref) / ref, pc = Math.round(Math.abs(p) * 100), what = perUnit ? money(mine) + " " + unitLabel(d.unit) : money(v);
+  if (pc < 2) { out.textContent = "About your usual price (" + money(ref) + (perUnit ? " " + unitLabel(d.unit) : "") + ")"; out.className = "verdict"; }
+  else { out.textContent = what + " is " + pc + "% " + (p > 0 ? "above" : "below") + " your average of " + money(ref) + (perUnit ? " " + unitLabel(d.unit) : ""); out.className = "verdict " + (p > 0 ? "up" : "down"); }
 });
 $("#up").addEventListener("click", sync);
 $("#gear").addEventListener("click", openSettings);
