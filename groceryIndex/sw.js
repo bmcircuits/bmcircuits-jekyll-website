@@ -1,5 +1,5 @@
 // Keeps the page available with no signal. Serves the saved copy first and refreshes it in the background.
-const CACHE = "gi-v3";
+const CACHE = "gi-v4";
 
 self.addEventListener("install", () => self.skipWaiting());
 

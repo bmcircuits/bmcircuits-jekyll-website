@@ -15,6 +15,7 @@ sitemap: false
 <meta name="theme-color" content="#0f766e">
 <title>Grocery Index</title>
 <style>
+/* Page frame: colours, header, buttons, search, filter chips, toast. */
 :root{--bg:#f6f7f5;--card:#fff;--ink:#16211c;--mut:#667469;--line:#e2e6e1;--acc:#0f766e;--onacc:#fff;--up:#b4281e;--down:#157a43;--warn:#9a6700}
 @media (prefers-color-scheme:dark){:root{--bg:#0f1512;--card:#18201c;--ink:#eaf0ec;--mut:#92a199;--line:#27312c;--acc:#4fd1c1;--onacc:#06231f;--up:#ff8a80;--down:#6fdc9a;--warn:#e3b341}}
 *{box-sizing:border-box}
@@ -42,6 +43,24 @@ h1{font-size:18px;margin:0}
 .chip.on{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
 .bar{display:flex;justify-content:space-between;align-items:center;color:var(--mut);font-size:13px;padding:8px 2px 10px}
 .bar select{font:inherit;font-size:13px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 6px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;max-width:88vw;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20;text-align:center}
+.toast.on{opacity:1}
+.top{flex-wrap:wrap}
+.btn.ghost{border-color:var(--acc);color:var(--acc);font-weight:600}
+[hidden]{display:none!important}
+/* Settings and new-item dialogs. */
+dialog{border:0;border-radius:16px;padding:18px;width:min(92vw,420px);background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{font-size:17px;margin:0 0 12px}
+dialog label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+dialog input,dialog select{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+dialog .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+dialog .help{font-size:12px;color:var(--mut);margin-top:6px}
+dialog .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.slink{display:flex;gap:6px}
+.slink input{flex:1;min-width:0;font-size:13px}
+dialog .sec{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
+/* The item cards, price history chart and the quick "save a price" row. */
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;cursor:pointer}
 .row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 .name{font-weight:600}
@@ -73,19 +92,7 @@ h1{font-size:18px;margin:0}
 .add .pdt{flex:1 1 150px}
 .verdict{margin-top:8px;font-weight:600;min-height:1.2em}
 .empty{text-align:center;color:var(--mut);padding:40px 0}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;max-width:88vw;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20;text-align:center}
-.toast.on{opacity:1}
-dialog{border:0;border-radius:16px;padding:18px;width:min(92vw,420px);background:var(--card);color:var(--ink)}
-dialog::backdrop{background:rgba(0,0,0,.45)}
-dialog h2{font-size:17px;margin:0 0 12px}
-dialog label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
-dialog input,dialog select{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
-dialog .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-dialog .help{font-size:12px;color:var(--mut);margin-top:6px}
-dialog .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
-[hidden]{display:none!important}
-.top{flex-wrap:wrap}
-.btn.ghost{border-color:var(--acc);color:var(--acc);font-weight:600}
+/* The receipt review screen. */
 #rdlg{padding:0;width:min(96vw,560px)}
 #rdlg[open]{display:flex;flex-direction:column;max-height:92vh}
 @media (max-width:600px){#rdlg.full{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0}#rdlg.full[open]{max-height:100dvh}}
@@ -103,7 +110,7 @@ dialog .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
 .rline{display:flex;gap:8px;align-items:center}
 #rdlg input[type=checkbox]{width:22px;height:22px;padding:0;flex:none;accent-color:var(--acc)}
 #rdlg .ri{flex:1 1 auto;min-width:0;padding:8px 10px}
-#rdlg .rp{width:5.4em;flex:none;text-align:right;padding:8px}
+#rdlg .rp{width:6.2em;flex:none;text-align:left;padding:8px 12px}
 .rsub{font-size:12px;color:var(--mut);margin:3px 0 0 30px;display:flex;gap:8px;flex-wrap:wrap}
 .rul:empty{display:none}
 .rtag{font-weight:700;color:var(--acc)}
@@ -117,9 +124,7 @@ dialog .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
 .rcalc{font-size:12px;color:var(--mut);margin-top:8px}
 .rcalc b{color:var(--ink)}
 .rwarnb{font-size:12px;color:var(--warn);font-weight:600;margin-top:6px}
-.slink{display:flex;gap:6px}
-.slink input{flex:1;min-width:0;font-size:13px}
-dialog .sec{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
+.radd{padding:14px 16px 24px}
 </style>
 </head>
 <body>
@@ -176,6 +181,7 @@ dialog .sec{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
       <datalist id="dl-ritems"></datalist>
     </div>
     <div id="r-rows"></div>
+    <div class="radd"><button class="btn ghost" id="r-more" type="button">+ Add a missed item</button></div>
     </div>
     <div class="rfoot"><button class="btn" id="r-close" type="button">Cancel</button><button class="btn pri" id="r-add" type="button">Add prices</button></div>
   </div>
@@ -215,11 +221,7 @@ dialog .sec{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
     </div>
     <div class="two">
       <div><label for="n-unit">Compare by</label>
-        <select id="n-unit" name="unit">
-          <option value="kg">per kg</option><option value="L">per L</option><option value="100g">per 100g</option><option value="ea" selected>each</option>
-          <option value="egg">per egg</option><option value="roll">per roll</option><option value="can">per can</option><option value="tablet">per tablet</option>
-          <option value="capsule">per capsule</option><option value="sachet">per sachet</option><option value="bag">per bag</option><option value="box">per box</option>
-        </select></div>
+        <select id="n-unit" name="unit"></select></div>
       <div><label for="n-qty">Units in pack</label><input id="n-qty" name="qty" type="number" inputmode="decimal" step="any" min="0" value="1"></div>
     </div>
     <div class="help">A 500g pack compared per kg has 0.5 units. A 12 pack of eggs compared per egg has 12.</div>
@@ -233,707 +235,805 @@ dialog .sec{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
 
 <script src="ocr/tesseract-shim.js"></script>
 <script>
-// ---- CONFIG ----
+// Settings you may edit, and the page-wide constants.
 // API_URL is the web app address from Apps Script (ends in /exec). It is not secret on its own:
 // every request also needs the passcode, which is never stored in this file.
-const CONFIG = { API_URL: "https://script.google.com/macros/s/AKfycbw7vaWS1uzAU5UuTkygV39bK5X0kR8EvgM-Hmnl7T6Upnu-yX2HIgw4aeLaNMmhP-uR3w/exec" };
+const CONFIG = { API_URL: "" };
 const SEED = /*SEED_JSON*/null; // demo build only
 // The receipt reader is stored beside this page in the ocr folder. If that folder is missing, it is fetched from this address instead.
 const TESS_URL = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
 const POP_MIN = 5; // "Popular" means this many prices logged or more
 
 // Receipt reading: turns the text of a till receipt into rows that can be matched to the item list.
-// Written for ALDI Australia receipts. Pure functions, no page access, so it can be tested on its own.
+// Generated from src/receipt/. Pure functions, no page access.
 const ReceiptLib = (function () {
-  const ABBR = {
-    chk: "chicken", ckn: "chicken", yog: "yogurt", yoghurt: "yogurt", grk: "greek", sty: "style", nat: "natural",
-    wtr: "water", frz: "frozen", crmd: "crumbed", btd: "battered", pot: "potato", chs: "cheese", mex: "mexican",
-    veg: "vegetable", org: "organic", lge: "large", sml: "small", whl: "whole", bf: "beef", tom: "tomato",
-    strwb: "strawberry", swt: "sweet", brn: "brown", wht: "white", blk: "black", grn: "green", choc: "chocolate",
-    mlk: "milk", parm: "parmesan", cho: "chocolate", bw: "body wash"
-  };
-  const DROP = new Set(["cw", "ea", "each", "per", "kg", "g", "ml", "l", "ltr", "pk", "pack", "bulk", "cage",
-    "cont", "container", "net", "of", "and", "the", "ww", "wh", "wn", "tpd", "pp"]);
-  const CATS = [
-    ["Health", /fish oil|vitamin|magnesium|turmeric|probiotic|supplement|collagen/],
-    ["Household", /soap|clean|laundry|soaker|bleach|tissue|toilet|dishwash|detergent|sponge|foil|bin bag|tidy bag|rexona|deodorant|body wash|toothpaste|shampoo|conditioner/],
-    ["Frozen", /frozen|ice cream/],
-    ["Meat", /chicken|beef|lamb|pork|bacon|sausage|mince|steak|chop|salmon|fish|ham|turkey|prawn|dumpling|wings|salami|peperoni|pepperoni|burger/],
-    ["Dairy & eggs", /milk|cheese|yogurt|butter|cream|egg|custard|feta|ricotta|mozz?arella|babybel|stracciatella|burrata|tofu/],
-    ["Veg", /onion|potato|carrot|broccoli|broccolini|lettuce|cucumber|tomato|corn|capsicum|zucchini|pumpkin|spinach|cabbage|choy|garlic|avocado|mushroom|salad|celery/],
-    ["Fruit", /apple|banana|orange|lemon|lime|grape|mango|pear|kiwi|berry|berries|melon|pineapple|peach/],
-    ["Coffee & tea", /coffee|tea|sachet|milo/],
-    ["Snacks & drinks", /chip|chocolate|biscuit|cookie|gum|lolly|lollies|piglet|pigtail|nut|water|soda|tonic|juice|cola|pepsi|sunkist|ginger beer|drink|snack|rice cake/],
-    ["Oils, sauces & spreads", /oil|sauce|vinegar|mayo|jam|spread|dressing|honey/],
-    ["Tinned & jars", /tinned|canned|olive|tuna|beans|jar|soup/],
-    ["Pantry", /rice|pasta|flour|sugar|salt|oat|noodle|couscous|bread|bun|loaf|cereal|spice|seasoning|cinnamon|herb|pepper|wrap/]
-  ];
+// Word lists, categories and number helpers.
+const ABBR = {
+  chk: "chicken", ckn: "chicken", yog: "yogurt", yoghurt: "yogurt", grk: "greek", sty: "style", nat: "natural",
+  wtr: "water", frz: "frozen", crmd: "crumbed", btd: "battered", pot: "potato", chs: "cheese", mex: "mexican",
+  veg: "vegetable", org: "organic", lge: "large", sml: "small", whl: "whole", bf: "beef", tom: "tomato",
+  strwb: "strawberry", swt: "sweet", brn: "brown", wht: "white", blk: "black", grn: "green", choc: "chocolate",
+  mlk: "milk", parm: "parmesan", cho: "chocolate", bw: "body wash"
+};
+const DROP = new Set(["cw", "ea", "each", "per", "kg", "g", "ml", "l", "ltr", "pk", "pack", "bulk", "cage",
+  "cont", "container", "net", "of", "and", "the", "ww", "wh", "wn", "tpd", "pp"]);
+const CATS = [
+  ["Health", /fish oil|vitamin|magnesium|turmeric|probiotic|supplement|collagen/],
+  ["Household", /soap|clean|laundry|soaker|bleach|tissue|toilet|dishwash|detergent|sponge|foil|bin bag|tidy bag|rexona|deodorant|body wash|toothpaste|shampoo|conditioner/],
+  ["Frozen", /frozen|ice cream/],
+  ["Meat", /chicken|beef|lamb|pork|bacon|sausage|mince|steak|chop|salmon|fish|ham|turkey|prawn|dumpling|wings|salami|peperoni|pepperoni|burger/],
+  ["Dairy & eggs", /milk|cheese|yogurt|butter|cream|egg|custard|feta|ricotta|mozz?arella|babybel|stracciatella|burrata|tofu/],
+  ["Veg", /onion|potato|carrot|broccoli|broccolini|lettuce|cucumber|tomato|corn|capsicum|zucchini|pumpkin|spinach|cabbage|choy|garlic|avocado|mushroom|salad|celery/],
+  ["Fruit", /apple|banana|orange|lemon|lime|grape|mango|pear|kiwi|berry|berries|melon|pineapple|peach/],
+  ["Coffee & tea", /coffee|tea|sachet|milo/],
+  ["Snacks & drinks", /chip|chocolate|biscuit|cookie|gum|lolly|lollies|piglet|pigtail|nut|water|soda|tonic|juice|cola|pepsi|sunkist|ginger beer|drink|snack|rice cake/],
+  ["Oils, sauces & spreads", /oil|sauce|vinegar|mayo|jam|spread|dressing|honey/],
+  ["Tinned & jars", /tinned|canned|olive|tuna|beans|jar|soup/],
+  ["Pantry", /rice|pasta|flour|sugar|salt|oat|noodle|couscous|bread|bun|loaf|cereal|spice|seasoning|cinnamon|herb|pepper|wrap/]
+];
 
-  const round2 = n => Math.round(n * 100) / 100;
-  const num = s => { const n = parseFloat(String(s).replace(",", ".").replace(/\s/g, "")); return isNaN(n) ? null : n; };
+const round2 = n => Math.round(n * 100) / 100;
+const num = s => { const n = parseFloat(String(s).replace(",", ".").replace(/\s/g, "")); return isNaN(n) ? null : n; };
 
-  // Fixes the slips the reader makes most on small receipt print.
-  function fixOcr(s) {
-    return String(s || "")
-      .replace(/(\d)\s+\.\s+(\d)/g, "$1.$2")
-      .replace(/\b[Iil]\s?kg\b/g, "1kg")
-      .replace(/([A-Za-z])[Iil]kg\b/g, "$1 1kg")
-      .replace(/(\d)[iIl|](g|kg|ml)\b/gi, (m, d, u) => d + "1" + u)
-      .replace(/(\d)\s*[.,]\s*(\d{1,3}\s?(?:l|ltr|kg|g|ml)\b)/gi, "$1.$2")
-      .replace(/(\d)\s*(?:grams?|gm)\b/gi, "$1g");
-  }
+// Repairs for the slips the reader makes most often.
+// Fixes the slips the reader makes most on small receipt print.
+function fixOcr(s) {
+  return String(s || "")
+    .replace(/(\d)\s+\.\s+(\d)/g, "$1.$2")
+    .replace(/\b[Iil]\s?kg\b/g, "1kg")
+    .replace(/([A-Za-z])[Iil]kg\b/g, "$1 1kg")
+    .replace(/(\d)[iIl|](g|kg|ml)\b/gi, (m, d, u) => d + "1" + u)
+    .replace(/(\d)\s*[.,]\s*(\d{1,3}\s?(?:l|ltr|kg|g|ml)\b)/gi, "$1.$2")
+    .replace(/(\d)\s*(?:grams?|gm)\b/gi, "$1g");
+}
 
-  // ---- pack sizes ----
-  // A receipt can name a pack more than one way ("12pk 700g", "30X375ML"), so every reading is kept in alts.
-  function toBase(v, u) {
-    if (u === "kg") return { k: "g", v: v * 1000 };
-    if (u === "g") return { k: "g", v };
-    if (u === "ml") return { k: "ml", v };
-    return { k: "ml", v: v * 1000 };
+// Reading pack sizes such as "12pk 700g" or "1.5kg".
+// A receipt can name a pack more than one way ("12pk 700g", "30X375ML"), so every reading is kept in alts.
+function toBase(v, u) {
+  if (u === "kg") return { k: "g", v: v * 1000 };
+  if (u === "g") return { k: "g", v };
+  if (u === "ml") return { k: "ml", v };
+  return { k: "ml", v: v * 1000 };
+}
+function parsePack(s) {
+  s = fixOcr(s).toLowerCase();
+  const alts = [];
+  if (/per\s*kg|\/\s*kg/.test(s)) alts.push({ k: "perkg", v: 1 });
+  s = s.replace(/(\d+)\s*x\s*(\d+(?:\.\d+)?)\s*(kg|g|ml|ltr|l)?\b/g, (m, n, size, u) => {
+    n = parseInt(n, 10);
+    if (u) { const b = toBase(parseFloat(size), u); alts.push({ k: b.k, v: b.v * n, n, size: parseFloat(size), u }); alts.push({ k: "n", v: n, size: parseFloat(size), u }); }
+    else alts.push({ k: "n", v: n });
+    return " ";
+  });
+  let m; const re = /(\d+(?:\.\d+)?)\s*(kg|g|ml|ltr|l)\b/g;
+  while ((m = re.exec(s))) alts.push(toBase(parseFloat(m[1]), m[2]));
+  m = s.match(/(\d+)\s*(?:pk|pack)\b/); if (m) alts.push({ k: "n", v: parseInt(m[1], 10) });
+  if (/\b(each|ea|half)\b/.test(s)) alts.push({ k: "ea", v: 1 });
+  if (!alts.length) return null;
+  const pri = ["perkg", "g", "ml", "n", "ea"];
+  const first = alts.slice().sort((a, b) => pri.indexOf(a.k) - pri.indexOf(b.k))[0];
+  return Object.assign({}, first, { alts });
+}
+function packCompat(a, b) {
+  if (!a || !b) return true;
+  const A = a.alts || [a], B = b.alts || [b];
+  return A.some(x => B.some(y => x.k === y.k && Math.abs(x.v - y.v) / Math.max(x.v, y.v) <= 0.05));
+}
+
+// Comparing receipt wording with item names.
+function stripPack(s) {
+  return fixOcr(s)
+    .replace(/\bp\/p\b/gi, " ").replace(/\b[A-Za-z]\/(?=[A-Za-z])/g, "").replace(/\b\d+\s?s\b/gi, " ").replace(/\b(\d)\s?ply\b/gi, " ")
+    .replace(/(\d+\s*x\s*\d+(?:\.\d+)?\s*(?:kg|g|ml|ltr|l)?\b)/gi, " ")
+    .replace(/(\d+(?:\.\d+)?\s*(?:x\s*)?(?:kg|g|ml|ltr|l|pk|pack)\b)/gi, " ")
+    .replace(/per\s*kg/gi, " ").replace(/\b(ea|each)\b/gi, " ");
+}
+function splitWords(s) {
+  return s.replace(/\b(Mc|Mac)([A-Z])/g, "$1\u0001$2").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/\u0001/g, "").replace(/([A-Za-z])(\d)/g, "$1 $2").replace(/(\d)([A-Za-z])/g, "$1 $2").replace(/[\/_\-]+/g, " ");
+}
+function stem(t) {
+  if (t.length > 4 && t.endsWith("ies")) return t.slice(0, -3) + "y";
+  if (t.length > 4 && t.endsWith("oes")) return t.slice(0, -2);
+  if (t.length > 3 && t.endsWith("s") && !t.endsWith("ss")) return t.slice(0, -1);
+  return t;
+}
+function tokens(s) {
+  const out = [];
+  splitWords(stripPack(s)).toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(Boolean).forEach(w => {
+    w = stem(ABBR[w] || w);
+    if (w.length > 1 && !DROP.has(w) && !/^\d+$/.test(w)) out.push(w);
+  });
+  return out;
+}
+function lev(a, b) {
+  const m = a.length, n = b.length; if (Math.abs(m - n) > 2) return 3;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
   }
-  function parsePack(s) {
-    s = fixOcr(s).toLowerCase();
-    const alts = [];
-    if (/per\s*kg|\/\s*kg/.test(s)) alts.push({ k: "perkg", v: 1 });
-    s = s.replace(/(\d+)\s*x\s*(\d+(?:\.\d+)?)\s*(kg|g|ml|ltr|l)?\b/g, (m, n, size, u) => {
-      n = parseInt(n, 10);
-      if (u) { const b = toBase(parseFloat(size), u); alts.push({ k: b.k, v: b.v * n, n, size: parseFloat(size), u }); alts.push({ k: "n", v: n, size: parseFloat(size), u }); }
-      else alts.push({ k: "n", v: n });
-      return " ";
-    });
-    let m; const re = /(\d+(?:\.\d+)?)\s*(kg|g|ml|ltr|l)\b/g;
-    while ((m = re.exec(s))) alts.push(toBase(parseFloat(m[1]), m[2]));
-    m = s.match(/(\d+)\s*(?:pk|pack)\b/); if (m) alts.push({ k: "n", v: parseInt(m[1], 10) });
-    if (/\b(each|ea|half)\b/.test(s)) alts.push({ k: "ea", v: 1 });
-    if (!alts.length) return null;
-    const pri = ["perkg", "g", "ml", "n", "ea"];
-    const first = alts.slice().sort((a, b) => pri.indexOf(a.k) - pri.indexOf(b.k))[0];
-    return Object.assign({}, first, { alts });
+  return prev[n];
+}
+function tokScore(x, y) {
+  if (x === y) return 1;
+  const mn = Math.min(x.length, y.length);
+  if (mn >= 4 && (x.startsWith(y) || y.startsWith(x))) return 0.8;
+  if (mn >= 5 && lev(x, y) <= 1) return 0.85;
+  return 0;
+}
+function score(rt, it) {
+  if (!rt.length || !it.length) return 0;
+  const best = (x, pool) => pool.reduce((m, y) => Math.max(m, tokScore(x, y)), 0);
+  const covItem = it.reduce((a, x) => a + best(x, rt), 0) / it.length;
+  const covRecv = rt.reduce((a, x) => a + best(x, it), 0) / rt.length;
+  return 0.65 * covItem + 0.35 * covRecv;
+}
+
+// Names, categories and units for items not yet in the list.
+function pretty(s) {
+  const raw = stripPack(s), caps = !/[a-z]/.test(raw);
+  const words = splitWords(raw).replace(/[^A-Za-z0-9&() ]+/g, " ").split(/\s+/).filter(Boolean)
+    .filter(w => !DROP.has(w.toLowerCase()))
+    .map(w => { const l = w.toLowerCase(); return ABBR[l] || (!caps && w === w.toUpperCase() && w.length <= 4 && !/\d/.test(w) ? w : l); });
+  const t = words.join(" ");
+  return t ? t[0].toUpperCase() + t.slice(1) : "";
+}
+function guessCategory(name) {
+  const t = name.toLowerCase();
+  for (const [c, re] of CATS) if (re.test(t)) return c;
+  return "Other";
+}
+// What each pack is counted in, following the conventions in the sheet (eggs per egg, drinks per can, and so on).
+function countUnit(name, n) {
+  const t = name.toLowerCase();
+  if (/\begg/.test(t)) return "egg";
+  if (/sachet/.test(t)) return "sachet";
+  if (/tissue|toilet|paper towel/.test(t)) return "roll";
+  if (/tidy bag|bin bag|garbage/.test(t)) return "bag";
+  if (/capsule/.test(t)) return "capsule";
+  if (/tablet/.test(t)) return "tablet";
+  if (n >= 6 && /pepsi|coke|cola|sunkist|ginger beer|lemonade|solo|soda|fanta|sprite|tonic|beer|cider/.test(t)) return "can";
+  return "ea";
+}
+function newItemFor(pk, name, isWeighed) {
+  const category = guessCategory(name);
+  if (isWeighed || (pk && pk.k === "perkg")) return { category, pack: "per kg", unit: "kg", qty: 1 };
+  if (pk && pk.n && pk.size && (pk.k === "g" || pk.k === "ml")) return { category, pack: pk.n + " x " + pk.size + pk.u, unit: pk.k === "g" ? "kg" : "L", qty: +(pk.v / 1000).toFixed(4) };
+  if (pk && pk.k === "g") return { category, pack: pk.v >= 1000 ? +(pk.v / 1000).toFixed(3) + "kg" : pk.v + "g", unit: "kg", qty: +(pk.v / 1000).toFixed(4) };
+  if (pk && pk.k === "ml") return { category, pack: pk.v >= 1000 ? +(pk.v / 1000).toFixed(3) + "L" : pk.v + "ml", unit: "L", qty: +(pk.v / 1000).toFixed(4) };
+  if (pk && pk.k === "n") return { category, pack: pk.v + " pack", unit: countUnit(name, pk.v), qty: pk.v };
+  return { category, pack: "each", unit: "ea", qty: 1 };
+}
+
+// How much of the item's unit is in this purchase. A 5 pack of lemons, 0.12 kg each, is 0.6 kg; a 1.5kg bag of potatoes is 1.5.
+// item: {unit, qty (usual pack), each (what one piece weighs or holds, in the item's unit)}
+function sizeFor(pk, it) {
+  const unit = it.unit, each = Number(it.each) || 0, usual = Number(it.qty) || null;
+  if (!unit) return { size: usual, how: "usual" };
+  const mass = unit === "kg", vol = unit === "L", h = unit === "100g", count = !mass && !vol && !h;
+  const alts = pk ? (pk.alts || [pk]) : [];
+  for (const a of alts) {
+    let v = null, how = "receipt";
+    if (a.k === "perkg") v = mass ? 1 : null;
+    else if (a.k === "g") v = mass ? a.v / 1000 : h ? a.v / 100 : null;
+    else if (a.k === "ml") v = vol ? a.v / 1000 : null;
+    else if (a.k === "n") { v = count ? a.v : (each ? a.v * each : null); if (!count) how = "each"; }
+    else if (a.k === "ea") { v = count ? 1 : (each || null); if (!count) how = "each"; }
+    if (v != null && v > 0) return { size: Math.round(v * 10000) / 10000, how, n: a.k === "n" ? a.v : a.k === "ea" ? 1 : null };
   }
-  function packCompat(a, b) {
-    if (!a || !b) return true;
-    const A = a.alts || [a], B = b.alts || [b];
-    return A.some(x => B.some(y => x.k === y.k && Math.abs(x.v - y.v) / Math.max(x.v, y.v) <= 0.05));
+  if (alts.some(a => a.k === "n" || a.k === "ea") && !count && !each) return { size: null, how: "needEach" };
+  return { size: usual, how: "usual" };
+}
+
+// Finding prices and item names on a line of text.
+// A price is digits, a point and two decimals. Weights (1.067 kg), sizes (1.25L) and rates (@ $4.90/kg, $2.90 each) are not prices.
+const PRICE_RE = /(-)?\s?\$?\s?(\d{1,4})\s?[.,]\s?(\d{2})(?!\d)(?!\s?(?:kg|g|ml|l|ltr|pk|x)\b)(\s?-)?/gi;
+function amounts(s) {
+  const out = []; let m; PRICE_RE.lastIndex = 0;
+  while ((m = PRICE_RE.exec(s))) {
+    const before = s.slice(0, m.index), after = s.slice(m.index + m[0].length);
+    if (/@\s*$/.test(before) || /^\s*\/\s*kg/i.test(after) || /^\s*(each|ea)\b/i.test(after)) continue;
+    const v = parseInt(m[2], 10) + parseInt(m[3], 10) / 100;
+    out.push({ v: round2((m[1] || m[4]) ? -v : v), idx: m.index, end: m.index + m[0].length });
   }
-  function stripPack(s) {
-    return fixOcr(s)
-      .replace(/\bp\/p\b/gi, " ").replace(/\b[A-Za-z]\/(?=[A-Za-z])/g, "").replace(/\b\d+\s?s\b/gi, " ").replace(/\b(\d)\s?ply\b/gi, " ")
-      .replace(/(\d+\s*x\s*\d+(?:\.\d+)?\s*(?:kg|g|ml|ltr|l)?\b)/gi, " ")
-      .replace(/(\d+(?:\.\d+)?\s*(?:x\s*)?(?:kg|g|ml|ltr|l|pk|pack)\b)/gi, " ")
-      .replace(/per\s*kg/gi, " ").replace(/\b(ea|each)\b/gi, " ");
+  return out;
+}
+const letters = s => (String(s).match(/[A-Za-z]/g) || []).length;
+// The item name on a line. The reader often adds junk beside the receipt, separated by wide gaps, so take the longest wordy piece.
+function nameBefore(s, idx) {
+  const segs = s.slice(0, idx).split(/\s{3,}|\t/).map(x => x.trim()).filter(x => letters(x) >= 3);
+  if (!segs.length) return "";
+  const best = segs.reduce((a, b) => letters(b) >= letters(a) ? b : a);
+  if (/^\$?\d+[.,]\d{2}\s*(each|ea)\b/i.test(best)) return "";
+  return best.replace(/^[^A-Za-z0-9&(]+/, "").replace(/[\s|\\]+$/, "");
+}
+
+// Finding the receipt date.
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const isoDate = (y, mo, d) => {
+  if (y < 100) y += 2000;
+  if (mo < 1 || mo > 12 || d < 1 || d > 31 || y < 2020 || y > 2100) return null;
+  return y + "-" + String(mo).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+};
+// Reads "25.07.26", "25/07/2026" and the till-slip style "17JUL.26" (a slash the reader put inside "17" is repaired).
+function findDate(s) {
+  s = String(s);
+  const n = s.match(/(?:^|[^\d])(\d{1,2})\s?[.\/-]\s?(\d{1,2})\s?[.\/-]\s?(\d{4}|\d{2})(?!\d)/);
+  if (n) return isoDate(parseInt(n[3], 10), parseInt(n[2], 10), parseInt(n[1], 10));
+  const w = s.replace(/(\d)[\/|](\d)(?=[A-Za-z]{3})/g, "$1$2").match(/(?:^|[^\d])(\d{1,2})\s?([A-Za-z]{3})\.?\s?(\d{4}|\d{2})(?!\d)/);
+  const mo = w ? MONTHS.indexOf(w[2].toLowerCase()) + 1 : 0;
+  return mo ? isoDate(parseInt(w[3], 10), mo, parseInt(w[1], 10)) : null;
+}
+
+// Working out which store a receipt is from.
+const PROFILES = [
+  ["aldi", "ALDI", /\baldi\b/i],
+  ["costco", "Costco", /\bcostco\b/i],
+  ["woolworths", "Woolies/Coles", /\bwoolworths\b|\bwoolworth\b|freshfood\s*people|fresh food people/i],
+  ["coles", "Woolies/Coles", /\bcoles\b|\bcole\s*s\b/i]
+];
+function detect(lines) {
+  const head = lines.slice(0, 30).join("\n");
+  for (const [p, store, re] of PROFILES) if (re.test(head)) return { p, store };
+  const all = lines.join("\n");
+  for (const [p, store, re] of PROFILES) if (re.test(all)) return { p, store };
+  // Layout clues when the name was not readable.
+  if (/\bnet\s*@/i.test(all) && /sub\s*total/i.test(all)) return { p: "woolworths", store: "Woolies/Coles" };
+  if (/total\s*for\s*\d+\s*items?/i.test(all)) return { p: "coles", store: "Woolies/Coles" };
+  return { p: "aldi", store: null };
+}
+
+const clean = raw => raw.replace(/^[^A-Za-z0-9$-]+/, "");
+
+// ALDI receipts.
+// ALDI line shapes (the reader often puts stray marks or letters in front of any of them):
+//   "380265 Eggplant per kg      4.03 A"     an item: six-digit code, name, price, tax letter
+//   "Qty 3 @ $5.49 ea."                      a multi-buy line for the item above
+//   "0.577kg Net @ 6.99 $/kg"                the weight line for a loose item above
+//   "New price  $ 7.69  -3.30 A"             a promotion on the item above
+//   "Item Void" + item line with a minus     cancels an earlier line
+const ALDI_CODE = /(?:^|\s)([0-9OoIl]{5,7})\s+(?=\S)/;
+const ALDI_PRICE = /^(.*?)\s+(-?\s?\d{1,4}[.,]\d{2})(?:\s+[A-Z4])?(?![\w.])/;
+const ALDI_QTY = /[QqO0A(\[]ty\s*(\d)\S{0,2}\s*\D{0,2}(\d+[.,]\d{2})/;
+const ALDI_WEIGHT = /(\S{0,7})\s*kg\s*net\s*[@9a]\s*\D{0,3}(\d+[.,]\d{2})/i;
+const ALDI_PROMO = /new\s*price\D{0,24}(\d+[.,]\d{2})/i;
+
+// Drops the marks before an item code: "Se        398905 5Star Beef" becomes "398905 5Star Beef".
+function aldiItemText(raw) {
+  const m = raw.match(ALDI_CODE);
+  if (!m) return null;
+  const before = raw.slice(0, m.index);
+  if (before.length > 30 || /\d[.,]\d{2}/.test(before)) return null;
+  return raw.slice(m.index).trim();
+}
+
+function aldiItem(raw, text, isVoid) {
+  const [, code, rest] = text.match(/^(\S+)\s+(.+)$/);
+  const a = rest.replace(/(\d)[)\]|!]\s?(\d{2})[)\]]?(?=\s|$)/g, "$1.$2").match(ALDI_PRICE);
+  let desc = (a ? a[1] : rest).trim();
+  if (!a) { // no readable price: drop trailing junk the reader picked up after the name
+    const w = desc.split(/\s+/);
+    while (w.length > 1 && !/[A-Za-z]{3,}|\d+(\.\d+)?\s?(kg|g|ml|l|pk)\b/i.test(w[w.length - 1])) w.pop();
+    desc = w.join(" ");
   }
-  function splitWords(s) {
-    return s.replace(/\b(Mc|Mac)([A-Z])/g, "$1\u0001$2").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/\u0001/g, "").replace(/([A-Za-z])(\d)/g, "$1 $2").replace(/(\d)([A-Za-z])/g, "$1 $2").replace(/[\/_\-]+/g, " ");
-  }
-  function stem(t) {
-    if (t.length > 4 && t.endsWith("ies")) return t.slice(0, -3) + "y";
-    if (t.length > 4 && t.endsWith("oes")) return t.slice(0, -2);
-    if (t.length > 3 && t.endsWith("s") && !t.endsWith("ss")) return t.slice(0, -1);
-    return t;
-  }
-  function tokens(s) {
-    const out = [];
-    splitWords(stripPack(s)).toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter(Boolean).forEach(w => {
-      w = stem(ABBR[w] || w);
-      if (w.length > 1 && !DROP.has(w) && !/^\d+$/.test(w)) out.push(w);
-    });
-    return out;
-  }
-  function lev(a, b) {
-    const m = a.length, n = b.length; if (Math.abs(m - n) > 2) return 3;
-    let prev = Array.from({ length: n + 1 }, (_, j) => j);
-    for (let i = 1; i <= m; i++) {
-      const cur = [i];
-      for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-      prev = cur;
+  let amount = a ? num(a[2].replace(/\s/g, "")) : null;
+  if (amount != null && isVoid) amount = -Math.abs(amount);
+  return { raw, code, desc, amount, qty: 1, unitPrice: null, weight: null, rate: null, discount: 0, isVoid };
+}
+
+// A void cancels the earlier line with the same code and price, so both are removed.
+function cancelVoids(items) {
+  items.filter(i => i.isVoid || (i.amount != null && i.amount < 0)).forEach(v => {
+    const k = items.findIndex(i => i !== v && !i.isVoid && i.amount > 0 && i.code === v.code && i.amount != null && Math.abs(i.amount + v.amount) < 0.005);
+    if (k >= 0) items.splice(items.indexOf(v), 1), items.splice(k, 1);
+  });
+}
+
+function parseAldi(lines, out) {
+  let cur = null, inItems = true, voidNext = false;
+  for (const raw of lines) {
+    const s = raw.replace(/^[^A-Za-z0-9]+/, "");
+    if (!out.date) { const d = findDate(s); if (d) out.date = d; }
+    if (/^sub\s*total/i.test(s)) {
+      const m = s.replace(/\(.*?\)/g, " ").match(/(\d+[.,]\d{2})/);
+      if (m) out.subtotal = num(m[1]);
+      inItems = false; cur = null; continue;
     }
-    return prev[n];
-  }
-  function tokScore(x, y) {
-    if (x === y) return 1;
-    const mn = Math.min(x.length, y.length);
-    if (mn >= 4 && (x.startsWith(y) || y.startsWith(x))) return 0.8;
-    if (mn >= 5 && lev(x, y) <= 1) return 0.85;
-    return 0;
-  }
-  function score(rt, it) {
-    if (!rt.length || !it.length) return 0;
-    const best = (x, pool) => pool.reduce((m, y) => Math.max(m, tokScore(x, y)), 0);
-    const covItem = it.reduce((a, x) => a + best(x, rt), 0) / it.length;
-    const covRecv = rt.reduce((a, x) => a + best(x, it), 0) / rt.length;
-    return 0.65 * covItem + 0.35 * covRecv;
-  }
-
-  function pretty(s) {
-    const raw = stripPack(s), caps = !/[a-z]/.test(raw);
-    const words = splitWords(raw).replace(/[^A-Za-z0-9&() ]+/g, " ").split(/\s+/).filter(Boolean)
-      .filter(w => !DROP.has(w.toLowerCase()))
-      .map(w => { const l = w.toLowerCase(); return ABBR[l] || (!caps && w === w.toUpperCase() && w.length <= 4 && !/\d/.test(w) ? w : l); });
-    const t = words.join(" ");
-    return t ? t[0].toUpperCase() + t.slice(1) : "";
-  }
-  function guessCategory(name) {
-    const t = name.toLowerCase();
-    for (const [c, re] of CATS) if (re.test(t)) return c;
-    return "Other";
-  }
-  // What each pack is counted in, following the conventions in the sheet (eggs per egg, drinks per can, and so on).
-  function countUnit(name, n) {
-    const t = name.toLowerCase();
-    if (/\begg/.test(t)) return "egg";
-    if (/sachet/.test(t)) return "sachet";
-    if (/tissue|toilet|paper towel/.test(t)) return "roll";
-    if (/tidy bag|bin bag|garbage/.test(t)) return "bag";
-    if (/capsule/.test(t)) return "capsule";
-    if (/tablet/.test(t)) return "tablet";
-    if (n >= 6 && /pepsi|coke|cola|sunkist|ginger beer|lemonade|solo|soda|fanta|sprite|tonic|beer|cider/.test(t)) return "can";
-    return "ea";
-  }
-  function newItemFor(pk, name, isWeighed) {
-    const category = guessCategory(name);
-    if (isWeighed || (pk && pk.k === "perkg")) return { category, pack: "per kg", unit: "kg", qty: 1 };
-    if (pk && pk.n && pk.size && (pk.k === "g" || pk.k === "ml")) return { category, pack: pk.n + " x " + pk.size + pk.u, unit: pk.k === "g" ? "kg" : "L", qty: +(pk.v / 1000).toFixed(4) };
-    if (pk && pk.k === "g") return { category, pack: pk.v >= 1000 ? +(pk.v / 1000).toFixed(3) + "kg" : pk.v + "g", unit: "kg", qty: +(pk.v / 1000).toFixed(4) };
-    if (pk && pk.k === "ml") return { category, pack: pk.v >= 1000 ? +(pk.v / 1000).toFixed(3) + "L" : pk.v + "ml", unit: "L", qty: +(pk.v / 1000).toFixed(4) };
-    if (pk && pk.k === "n") return { category, pack: pk.v + " pack", unit: countUnit(name, pk.v), qty: pk.v };
-    return { category, pack: "each", unit: "ea", qty: 1 };
-  }
-
-  // How much of the item's unit is in this purchase. A 5 pack of lemons, 0.12 kg each, is 0.6 kg; a 1.5kg bag of potatoes is 1.5.
-  // item: {unit, qty (usual pack), each (what one piece weighs or holds, in the item's unit)}
-  function sizeFor(pk, it) {
-    const unit = it.unit, each = Number(it.each) || 0, usual = Number(it.qty) || null;
-    if (!unit) return { size: usual, how: "usual" };
-    const mass = unit === "kg", vol = unit === "L", h = unit === "100g", count = !mass && !vol && !h;
-    const alts = pk ? (pk.alts || [pk]) : [];
-    for (const a of alts) {
-      let v = null, how = "receipt";
-      if (a.k === "perkg") v = mass ? 1 : null;
-      else if (a.k === "g") v = mass ? a.v / 1000 : h ? a.v / 100 : null;
-      else if (a.k === "ml") v = vol ? a.v / 1000 : null;
-      else if (a.k === "n") { v = count ? a.v : (each ? a.v * each : null); if (!count) how = "each"; }
-      else if (a.k === "ea") { v = count ? 1 : (each || null); if (!count) how = "each"; }
-      if (v != null && v > 0) return { size: Math.round(v * 10000) / 10000, how, n: a.k === "n" ? a.v : a.k === "ea" ? 1 : null };
+    if (/^total\s*[\(\{\[]?\s*incl/i.test(s)) {
+      const m = s.replace(/[\(\{\[].*?[\)\}\]]/g, " ").match(/(\d+[.,]\d{2})/);
+      if (m) { if (out.total == null) out.total = num(m[1]); if (out.subtotal == null) out.subtotal = out.total; }
+      inItems = false; cur = null; continue;
     }
-    if (alts.some(a => a.k === "n" || a.k === "ea") && !count && !each) return { size: null, how: "needEach" };
-    return { size: usual, how: "usual" };
-  }
-
-  // ---- reading amounts on a line ----
-  // A price is digits, a point and two decimals. Weights (1.067 kg), sizes (1.25L) and rates (@ $4.90/kg, $2.90 each) are not prices.
-  const PRICE_RE = /(-)?\s?\$?\s?(\d{1,4})\s?[.,]\s?(\d{2})(?!\d)(?!\s?(?:kg|g|ml|l|ltr|pk|x)\b)(\s?-)?/gi;
-  function amounts(s) {
-    const out = []; let m; PRICE_RE.lastIndex = 0;
-    while ((m = PRICE_RE.exec(s))) {
-      const before = s.slice(0, m.index), after = s.slice(m.index + m[0].length);
-      if (/@\s*$/.test(before) || /^\s*\/\s*kg/i.test(after) || /^\s*(each|ea)\b/i.test(after)) continue;
-      const v = parseInt(m[2], 10) + parseInt(m[3], 10) / 100;
-      out.push({ v: round2((m[1] || m[4]) ? -v : v), idx: m.index, end: m.index + m[0].length });
+    if (!inItems) {
+      const cm = s.match(/^(\d{1,3})\s+items?\b/i); if (cm) out.count = parseInt(cm[1], 10);
+      continue;
     }
-    return out;
-  }
-  const letters = s => (String(s).match(/[A-Za-z]/g) || []).length;
-  // The item name on a line. The reader often adds junk beside the receipt, separated by wide gaps, so take the longest wordy piece.
-  function nameBefore(s, idx) {
-    const segs = s.slice(0, idx).split(/\s{3,}|\t/).map(x => x.trim()).filter(x => letters(x) >= 3);
-    if (!segs.length) return "";
-    const best = segs.reduce((a, b) => letters(b) >= letters(a) ? b : a);
-    if (/^\$?\d+[.,]\d{2}\s*(each|ea)\b/i.test(best)) return "";
-    return best.replace(/^[^A-Za-z0-9&(]+/, "").replace(/[\s|\\]+$/, "");
-  }
-  function findDate(s) {
-    const m = String(s).match(/(?:^|[^\d])(\d{1,2})\s?[.\/-]\s?(\d{1,2})\s?[.\/-]\s?(\d{4}|\d{2})(?!\d)/);
-    if (!m) return null;
-    let y = parseInt(m[3], 10); if (y < 100) y += 2000;
-    const d = parseInt(m[1], 10), mo = parseInt(m[2], 10);
-    if (mo < 1 || mo > 12 || d < 1 || d > 31 || y < 2020 || y > 2100) return null;
-    return y + "-" + String(mo).padStart(2, "0") + "-" + String(d).padStart(2, "0");
-  }
-  const PROFILES = [
-    ["aldi", "ALDI", /\baldi\b/i],
-    ["costco", "Costco", /\bcostco\b/i],
-    ["woolworths", "Woolies/Coles", /\bwoolworths\b|\bwoolworth\b|freshfood\s*people|fresh food people/i],
-    ["coles", "Woolies/Coles", /\bcoles\b|\bcole\s*s\b/i]
-  ];
-  function detect(lines) {
-    const head = lines.slice(0, 30).join("\n");
-    for (const [p, store, re] of PROFILES) if (re.test(head)) return { p, store };
-    const all = lines.join("\n");
-    for (const [p, store, re] of PROFILES) if (re.test(all)) return { p, store };
-    // Layout clues when the name was not readable.
-    if (/\bnet\s*@/i.test(all) && /sub\s*total/i.test(all)) return { p: "woolworths", store: "Woolies/Coles" };
-    if (/total\s*for\s*\d+\s*items?/i.test(all)) return { p: "coles", store: "Woolies/Coles" };
-    return { p: "aldi", store: null };
-  }
+    if (/item\s*void/i.test(s)) { voidNext = true; continue; }
 
-  const clean = raw => raw.replace(/^[^A-Za-z0-9$-]+/, "");
+    const text = aldiItemText(raw);
+    if (text) { cur = aldiItem(raw, text, voidNext); voidNext = false; out.items.push(cur); continue; }
+    if (!cur) continue;
 
-  // ---- ALDI ----
-  function parseAldi(lines, out) {
-    let cur = null, items = true;
-    for (const raw of lines) {
-      const s = raw.replace(/^[^A-Za-z0-9]+/, "");
-      if (!out.date) { const d = findDate(s); if (d) out.date = d; }
-      if (/^sub\s*total/i.test(s)) {
-        const m = s.replace(/\(.*?\)/g, " ").match(/(\d+[.,]\d{2})/);
-        if (m) out.subtotal = num(m[1]);
-        items = false; cur = null; continue;
+    let m = raw.match(ALDI_QTY);
+    if (m) { cur.qty = parseInt(m[1], 10); cur.unitPrice = num(m[2]); continue; }
+    m = raw.match(ALDI_WEIGHT);
+    if (m) {
+      cur.rate = num(m[2]);
+      const w = num(m[1].replace(/[^\d.,]/g, "").replace(/^[.,]/, "0."));
+      cur.weight = w;
+      // The weight can be garbled; the price on the item line says what it must have been.
+      if (cur.amount != null && cur.rate > 0 && (w == null || Math.abs(w * cur.rate - cur.amount) > 0.03)) cur.weight = Math.round(cur.amount / cur.rate * 1000) / 1000;
+      continue;
+    }
+    m = raw.match(ALDI_PROMO);
+    if (m && cur.amount != null) cur.discount = round2(cur.discount + cur.amount - num(m[1]));
+  }
+  cancelVoids(out.items);
+  out.items.forEach(it => { it.weighed = /\sC[WHV]{1,2}$/i.test(it.desc) && it.rate == null; });
+}
+
+// Quantity and weight lines shared by Woolworths and Coles.
+// Lines shared by Woolworths and Coles: "Qty 2 @ $2.90 each", "2 @ $9.00 EACH" and "1.067 kg NET @ $4.90/kg".
+const QTY_RE = /^(?:[qa]ty\s*)?(\d+)\s*@?\s*\$?\s*(\d+[.,]\d{2})\s*(?:each|ea\b)/i;
+const QTY_RE2 = /^[qa]ty\s*(\d+)\s*@?\s*\D{0,2}(\d+[.,]\d{2})/i;
+const WGT_RE = /(\d*[.,]?\d+)\s*kg\s*net\s*@\s*\$?\s*(\d+[.,]\d{2})/i;
+function mk(raw, desc, amount) {
+  return { raw, code: "", desc, amount, qty: 1, unitPrice: null, weight: null, rate: null, discount: 0, weighed: false };
+}
+function qtyOf(s) {
+  const m = s.match(QTY_RE) || s.match(QTY_RE2);
+  return m ? { qty: parseInt(m[1], 10), unitPrice: num(m[2]) } : null;
+}
+function wgtOf(s, amt) {
+  const m = s.match(WGT_RE); if (!m) return null;
+  const rate = num(m[2]); let w = num(m[1]);
+  // The leading "0." can be lost: the price on the line says what the weight must have been.
+  if (amt != null && rate > 0 && Math.abs(w * rate - amt) > 0.03 && Math.abs(amt / rate - w) > 0.002) w = Math.round(amt / rate * 1000) / 1000;
+  return { weight: w, rate };
+}
+
+// Woolworths receipts.
+function parseWoolworths(lines, out) {
+  let pending = null, cur = null, items = true;
+  for (const raw of lines) {
+    const s = clean(raw), am = amounts(s);
+    if (!out.date) { const d = findDate(s); if (d) out.date = d; }
+    if (items && /sub\s*total|^total\b|merch|term\s*id|mastercard|visa\b|purchase\b/i.test(s)) {
+      items = false;
+      const cm = s.match(/(\d{1,3})\s*sub\s*total/i); if (cm) out.count = parseInt(cm[1], 10);
+    }
+    if (!items) {
+      const cm = s.match(/(\d{1,3})\s*sub\s*total/i); if (cm) out.count = parseInt(cm[1], 10);
+      const a = am.filter(x => x.v > 0).pop();
+      if (a) {
+        if (/sub\s*total/i.test(s) && out.subtotal == null) out.subtotal = a.v;
+        else if (/^total\b/i.test(s) && out.total == null) out.total = a.v;
+        else if (/purchase|^eft\b/i.test(s) && out.card == null) out.card = a.v;
       }
-      if (/^total\s*[\(\{\[]?\s*incl/i.test(s)) {
-        const m = s.replace(/[\(\{\[].*?[\)\}\]]/g, " ").match(/(\d+[.,]\d{2})/);
-        if (m) { if (out.total == null) out.total = num(m[1]); if (out.subtotal == null) out.subtotal = out.total; }
-        items = false; cur = null; continue;
-      }
-      if (!items) {
-        const cm = s.match(/^(\d{1,3})\s+items?\b/i); if (cm) out.count = parseInt(cm[1], 10);
-        continue;
-      }
-      let m = s.match(/^qty\s*(\d+)\s*@?\s*\D{0,2}(\d+[.,]\d{2})/i);
-      if (m && cur) { cur.qty = parseInt(m[1], 10); cur.unitPrice = num(m[2]); continue; }
-      m = s.match(/^(\d+[.,]\d{2,3})\s*kg\s*net\s*@\s*\D{0,3}(\d+[.,]\d{2})/i);
-      if (m && cur) { cur.weight = num(m[1]); cur.rate = num(m[2]); continue; }
-      m = s.match(/^([0-9OoIl]{5,7})\s+(.+)$/);
-      if (m) {
-        const rest = m[2];
-        const a = rest.match(/^(.*?)\s+(\d{1,4}[.,]\d{2})(?:\s+([A-Z]))?(?![\w.])/);
-        let desc = (a ? a[1] : rest).trim();
-        if (!a) { // no readable price: drop trailing junk the reader picked up after the name
-          const w = desc.split(/\s+/);
-          while (w.length > 1 && !/[A-Za-z]{3,}|\d+(\.\d+)?\s?(kg|g|ml|l|pk)\b/i.test(w[w.length - 1])) w.pop();
-          desc = w.join(" ");
+      continue;
+    }
+    const neg = am.filter(x => x.v < 0).pop(), pos = am.filter(x => x.v > 0).pop();
+    if (neg) { out.basketDiscount = round2((out.basketDiscount || 0) + -neg.v); pending = null; continue; }
+    const w = wgtOf(s, pos ? pos.v : null);
+    if (w) {
+      const it = mk(raw, pending || (cur && cur.desc) || "", pos ? pos.v : null);
+      Object.assign(it, w, { weighed: true });
+      if (pending) { out.items.push(it); cur = it; pending = null; }
+      continue;
+    }
+    const q = qtyOf(s);
+    if (q) {
+      const it = mk(raw, pending || "", pos ? pos.v : null);
+      it.qty = q.qty; it.unitPrice = q.unitPrice;
+      if (pending) { out.items.push(it); cur = it; pending = null; }
+      continue;
+    }
+    if (pos) {
+      const nm = nameBefore(s, pos.idx);
+      if (nm) { const it = mk(raw, nm, pos.v); out.items.push(it); cur = it; pending = null; }
+      continue;
+    }
+    const t = nameBefore(s + "   x", s.length);
+    if (t && letters(t) >= 4 && !/tax invoice|^pos\b|trans\b|^ph\b/i.test(t)) pending = t;
+  }
+  if (out.subtotal == null) out.subtotal = out.total != null ? out.total : (out.card != null ? out.card : null);
+}
+
+// Coles receipts.
+function parseColes(lines, out) {
+  let cur = null, items = true;
+  for (const raw of lines) {
+    const s = clean(raw), am = amounts(s);
+    if (!out.date) { const d = findDate(s); if (d) out.date = d; }
+    if (items && /total\s*for\s*\d+\s*items?|^total\b|^eft\b/i.test(s)) {
+      items = false;
+      const cm = s.match(/total\s*for\s*(\d+)\s*items?/i); if (cm) out.count = parseInt(cm[1], 10);
+      const a = am.filter(x => x.v > 0).pop(); if (a && out.subtotal == null) out.subtotal = a.v;
+      continue;
+    }
+    if (!items) {
+      if (out.subtotal == null) { const a = am.filter(x => x.v > 0).pop(); if (a && /^eft\b|total|purchase/i.test(s)) out.subtotal = a.v; }
+      continue;
+    }
+    if (/^description\b/i.test(s)) continue;
+    const q = qtyOf(s);
+    if (q && cur && cur.qty === 1 && !am.some(x => x.v > 0 && s.indexOf("@") < 0)) { cur.qty = q.qty; cur.unitPrice = q.unitPrice; continue; }
+    const neg = am.filter(x => x.v < 0).pop(), pos = am.filter(x => x.v > 0).pop();
+    if (neg) {
+      // "PERCY PIG COLIN 2 FOR $3  -$9.00": the saving covers the last N items bought.
+      const d = -neg.v, nm = s.match(/(\d+)\s*for\s*\$?\s*(\d+(?:[.,]\d{1,2})?)/i), n = nm ? parseInt(nm[1], 10) : 1, offer = nm ? num(nm[2]) : null;
+      let group = []; let units = 0;
+      // The offer price says which items it covered: their normal prices less the saving make the offer price.
+      if (offer != null) {
+        let sum = 0;
+        for (let i = out.items.length - 1; i >= 0 && i >= out.items.length - 4; i--) {
+          sum += out.items[i].amount || 0;
+          if (Math.abs(sum - d - offer) <= 0.02) { group = out.items.slice(i); break; }
         }
-        cur = { raw: raw, code: m[1], desc: desc, amount: a ? num(a[2]) : null, qty: 1, unitPrice: null, weight: null, rate: null, discount: 0 };
-        out.items.push(cur);
       }
+      if (!group.length) for (let i = out.items.length - 1; i >= 0 && units < n; i--) { group.unshift(out.items[i]); units += out.items[i].qty; }
+      else if (group.length === 1 && group[0].qty === 1 && n > 1) group[0].qty = n; // the "2 @ $9.00 each" line was not read
+      const base = group.reduce((a, i) => a + (i.amount || 0), 0) || 1;
+      group.forEach(i => { i.discount = round2(i.discount + d * ((i.amount || 0) / base)); i.promo = s.replace(/\s{2,}.*$/, "").trim(); });
+      continue;
     }
-    out.items.forEach(it => { it.weighed = /\sC[WHV]{1,2}$/i.test(it.desc) && it.rate == null; });
-  }
-
-  // Lines shared by Woolworths and Coles: "Qty 2 @ $2.90 each", "2 @ $9.00 EACH" and "1.067 kg NET @ $4.90/kg".
-  const QTY_RE = /^(?:[qa]ty\s*)?(\d+)\s*@?\s*\$?\s*(\d+[.,]\d{2})\s*(?:each|ea\b)/i;
-  const QTY_RE2 = /^[qa]ty\s*(\d+)\s*@?\s*\D{0,2}(\d+[.,]\d{2})/i;
-  const WGT_RE = /(\d*[.,]?\d+)\s*kg\s*net\s*@\s*\$?\s*(\d+[.,]\d{2})/i;
-  function mk(raw, desc, amount) {
-    return { raw, code: "", desc, amount, qty: 1, unitPrice: null, weight: null, rate: null, discount: 0, weighed: false };
-  }
-  function qtyOf(s) {
-    const m = s.match(QTY_RE) || s.match(QTY_RE2);
-    return m ? { qty: parseInt(m[1], 10), unitPrice: num(m[2]) } : null;
-  }
-  function wgtOf(s, amt) {
-    const m = s.match(WGT_RE); if (!m) return null;
-    const rate = num(m[2]); let w = num(m[1]);
-    // The leading "0." can be lost: the price on the line says what the weight must have been.
-    if (amt != null && rate > 0 && Math.abs(w * rate - amt) > 0.03 && Math.abs(amt / rate - w) > 0.002) w = Math.round(amt / rate * 1000) / 1000;
-    return { weight: w, rate };
-  }
-
-  // ---- Woolworths ----
-  function parseWoolworths(lines, out) {
-    let pending = null, cur = null, items = true;
-    for (const raw of lines) {
-      const s = clean(raw), am = amounts(s);
-      if (!out.date) { const d = findDate(s); if (d) out.date = d; }
-      if (items && /sub\s*total|^total\b|merch|term\s*id|mastercard|visa\b|purchase\b/i.test(s)) {
-        items = false;
-        const cm = s.match(/(\d{1,3})\s*sub\s*total/i); if (cm) out.count = parseInt(cm[1], 10);
-      }
-      if (!items) {
-        const cm = s.match(/(\d{1,3})\s*sub\s*total/i); if (cm) out.count = parseInt(cm[1], 10);
-        const a = am.filter(x => x.v > 0).pop();
-        if (a) {
-          if (/sub\s*total/i.test(s) && out.subtotal == null) out.subtotal = a.v;
-          else if (/^total\b/i.test(s) && out.total == null) out.total = a.v;
-          else if (/purchase|^eft\b/i.test(s) && out.card == null) out.card = a.v;
-        }
-        continue;
-      }
-      const neg = am.filter(x => x.v < 0).pop(), pos = am.filter(x => x.v > 0).pop();
-      if (neg) { out.basketDiscount = round2((out.basketDiscount || 0) + -neg.v); pending = null; continue; }
-      const w = wgtOf(s, pos ? pos.v : null);
-      if (w) {
-        const it = mk(raw, pending || (cur && cur.desc) || "", pos ? pos.v : null);
-        Object.assign(it, w, { weighed: true });
-        if (pending) { out.items.push(it); cur = it; pending = null; }
-        continue;
-      }
-      const q = qtyOf(s);
-      if (q) {
-        const it = mk(raw, pending || "", pos ? pos.v : null);
-        it.qty = q.qty; it.unitPrice = q.unitPrice;
-        if (pending) { out.items.push(it); cur = it; pending = null; }
-        continue;
-      }
-      if (pos) {
-        const nm = nameBefore(s, pos.idx);
-        if (nm) { const it = mk(raw, nm, pos.v); out.items.push(it); cur = it; pending = null; }
-        continue;
-      }
-      const t = nameBefore(s + "   x", s.length);
-      if (t && letters(t) >= 4 && !/tax invoice|^pos\b|trans\b|^ph\b/i.test(t)) pending = t;
-    }
-    if (out.subtotal == null) out.subtotal = out.total != null ? out.total : (out.card != null ? out.card : null);
-  }
-
-  // ---- Coles ----
-  function parseColes(lines, out) {
-    let cur = null, items = true;
-    for (const raw of lines) {
-      const s = clean(raw), am = amounts(s);
-      if (!out.date) { const d = findDate(s); if (d) out.date = d; }
-      if (items && /total\s*for\s*\d+\s*items?|^total\b|^eft\b/i.test(s)) {
-        items = false;
-        const cm = s.match(/total\s*for\s*(\d+)\s*items?/i); if (cm) out.count = parseInt(cm[1], 10);
-        const a = am.filter(x => x.v > 0).pop(); if (a && out.subtotal == null) out.subtotal = a.v;
-        continue;
-      }
-      if (!items) {
-        if (out.subtotal == null) { const a = am.filter(x => x.v > 0).pop(); if (a && /^eft\b|total|purchase/i.test(s)) out.subtotal = a.v; }
-        continue;
-      }
-      if (/^description\b/i.test(s)) continue;
-      const q = qtyOf(s);
-      if (q && cur && cur.qty === 1 && !am.some(x => x.v > 0 && s.indexOf("@") < 0)) { cur.qty = q.qty; cur.unitPrice = q.unitPrice; continue; }
-      const neg = am.filter(x => x.v < 0).pop(), pos = am.filter(x => x.v > 0).pop();
-      if (neg) {
-        // "PERCY PIG COLIN 2 FOR $3  -$9.00": the saving covers the last N items bought.
-        const d = -neg.v, nm = s.match(/(\d+)\s*for\s*\$?\s*(\d+(?:[.,]\d{1,2})?)/i), n = nm ? parseInt(nm[1], 10) : 1, offer = nm ? num(nm[2]) : null;
-        let group = []; let units = 0;
-        // The offer price says which items it covered: their normal prices less the saving make the offer price.
-        if (offer != null) {
-          let sum = 0;
-          for (let i = out.items.length - 1; i >= 0 && i >= out.items.length - 4; i--) {
-            sum += out.items[i].amount || 0;
-            if (Math.abs(sum - d - offer) <= 0.02) { group = out.items.slice(i); break; }
-          }
-        }
-        if (!group.length) for (let i = out.items.length - 1; i >= 0 && units < n; i--) { group.unshift(out.items[i]); units += out.items[i].qty; }
-        else if (group.length === 1 && group[0].qty === 1 && n > 1) group[0].qty = n; // the "2 @ $9.00 each" line was not read
-        const base = group.reduce((a, i) => a + (i.amount || 0), 0) || 1;
-        group.forEach(i => { i.discount = round2(i.discount + d * ((i.amount || 0) / base)); i.promo = s.replace(/\s{2,}.*$/, "").trim(); });
-        continue;
-      }
-      if (pos) {
-        const nm = nameBefore(s, pos.idx);
-        if (nm) { const it = mk(raw, nm, pos.v); out.items.push(it); cur = it; }
-      }
+    if (pos) {
+      const nm = nameBefore(s, pos.idx);
+      if (nm) { const it = mk(raw, nm, pos.v); out.items.push(it); cur = it; }
     }
   }
+}
 
-  // ---- Costco ----
-  // Each item is two lines: the name, then "item number, 1x, unit price, line total". "TPD ..." lines are price drops, shown with a minus.
-  function parseCostco(lines, out) {
-    const run = needMarker => {
-      out.items = []; let started = !needMarker, pending = null, cur = null, pendingTpd = false, items = true;
-      const flush = () => {
-        if (pending && !pendingTpd && letters(pending) >= 5) { const it = mk(pending, pending, null); out.items.push(it); cur = it; }
-        pending = null; pendingTpd = false;
-      };
-      for (const raw of lines) {
-        const s = clean(raw), am = amounts(s);
-        if (!out.date) { const d = findDate(s); if (d) out.date = d; }
-        if (!started) { if (/tax\s*invoice/i.test(s)) started = true; continue; }
-        if (!items) continue;
-        if (/^(sub\s*total|total\b|tax\b|visa\b|mastercard|eft\b|costco\b)/i.test(s) && (out.items.length || pending)) {
-          flush(); items = false;
-          const a = am.filter(x => x.v > 0).pop(); if (a && /^(sub\s*total|total\b)/i.test(s)) out.subtotal = a.v;
-          continue;
-        }
-        if (!am.length) {
-          // A name line: product names are printed in capitals. The reader adds junk beside them, so judge each piece on its own.
-          const cand = s.split(/\s{3,}|\t/).map(x => x.trim()).filter(x => (x.match(/[A-Z]/g) || []).length >= 4 && (x.match(/[a-z]/g) || []).length <= 1 && letters(x) >= 5);
-          if (cand.length) {
-            const nm = cand.reduce((a, b) => letters(b) >= letters(a) ? b : a).replace(/^[^A-Za-z0-9&(]+/, "").replace(/[\s|\\:;.,]+$/, "");
-            flush(); pending = nm; pendingTpd = /^tpd\b/i.test(nm);
-          }
-          else if (pendingTpd && /\d{4,}/.test(s)) { if (cur) cur.discountUnread = true; pending = null; pendingTpd = false; }
-          continue;
-        }
-        const last = am[am.length - 1];
-        if (last.v < 0 || pendingTpd) {
-          const d = Math.abs(last.v);
-          if (cur) { cur.discount = round2(cur.discount + d); cur.promo = pending ? pending.replace(/&|\s+$/g, "").trim() : "price drop"; }
-          pending = null; pendingTpd = false; continue;
-        }
-        if (pending) {
-          const it = mk(pending, pending, last.v);
-          const xm = s.match(/(?:^|\s)([0-9Il])\s*x\s/i);
-          const unit = am.length >= 2 ? am[0].v : null;
-          let q = xm ? (/[0-9]/.test(xm[1]) ? parseInt(xm[1], 10) : 1) : 1;
-          if (unit && unit > 0) { const r = Math.round(last.v / unit); if (r >= 1 && r <= 12 && Math.abs(r * unit - last.v) <= 0.03) q = r; }
-          it.qty = q; it.unitPrice = unit && q > 1 ? unit : null;
-          out.items.push(it); cur = it; pending = null; pendingTpd = false;
-        }
-      }
-      flush();
+// Costco receipts.
+// Each item is two lines: the name, then "item number, 1x, unit price, line total". "TPD ..." lines are price drops, shown with a minus.
+function parseCostco(lines, out) {
+  const run = needMarker => {
+    out.items = []; let started = !needMarker, pending = null, cur = null, pendingTpd = false, items = true;
+    const flush = () => {
+      if (pending && !pendingTpd && letters(pending) >= 5) { const it = mk(pending, pending, null); out.items.push(it); cur = it; }
+      pending = null; pendingTpd = false;
     };
-    run(true);
-    if (!out.items.length) run(false);
-  }
-
-  // ---- reading the receipt text ----
-  function parse(text) {
-    const lines = String(text || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-    const out = { store: null, profile: null, date: null, items: [], subtotal: null, total: null, count: null, basketDiscount: 0 };
-    const d = detect(lines); out.store = d.store; out.profile = d.p;
-    if (d.p === "costco") parseCostco(lines, out);
-    else if (d.p === "woolworths") parseWoolworths(lines, out);
-    else if (d.p === "coles") parseColes(lines, out);
-    else parseAldi(lines, out);
-    // No total line was read: take the card amount if there is one.
-    if (out.subtotal == null) {
-      for (const raw of lines) {
-        const s = clean(raw);
-        if (/card\s*sales|^eft\b|purchase\b/i.test(s)) { const a = amounts(s).filter(x => x.v > 0).pop(); if (a) { out.subtotal = a.v; break; } }
+    for (const raw of lines) {
+      const s = clean(raw), am = amounts(s);
+      if (!out.date) { const d = findDate(s); if (d) out.date = d; }
+      if (!started) { if (/tax\s*invoice/i.test(s)) started = true; continue; }
+      if (!items) continue;
+      if (/^(sub\s*total|total\b|tax\b|visa\b|mastercard|eft\b|costco\b)/i.test(s) && (out.items.length || pending)) {
+        flush(); items = false;
+        const a = am.filter(x => x.v > 0).pop(); if (a && /^(sub\s*total|total\b)/i.test(s)) out.subtotal = a.v;
+        continue;
       }
-    }
-    resolve(out);
-    return out;
-  }
-
-  // ---- checking the sums ----
-  // OCR mistakes are usually one look-alike digit: 3 for 8, 1 for 4, 5 for 8 and so on.
-  const LOOK = { "0": "869", "1": "47", "2": "7", "3": "85", "4": "19", "5": "6839", "6": "580", "7": "12", "8": "3056", "9": "4805" };
-  function altsOf(v) {
-    const str = Math.abs(v).toFixed(2).replace(".", ""), out = new Map();
-    for (let i = 0; i < str.length; i++) for (const r of (LOOK[str[i]] || "")) {
-      const t = str.slice(0, i) + r + str.slice(i + 1);
-      if (i === 0 && r === "0" && str.length > 3) continue;
-      const nv = round2(parseInt(t, 10) / 100); if (nv !== Math.abs(v)) out.set(nv, true);
-    }
-    return [...out.keys()];
-  }
-  function repair(out, diff) {
-    // diff is how much the receipt total is above the lines. Each entry shows how much a changed digit would move the sum.
-    const ents = [];
-    out.items.forEach((i, idx) => { if (i.amount != null && i.rate == null) altsOf(i.amount).forEach(nv => ents.push({ i, nv, d: round2(nv - i.amount), idx })); });
-    const near = (a, b) => Math.abs(a - b) < 0.005;
-    const singles = ents.filter(e => near(e.d, diff));
-    if (singles.length === 1) return { unique: [singles[0]] };
-    if (singles.length > 1) return { cands: singles.slice(0, 8) };
-    const pairs = [];
-    for (let a = 0; a < ents.length; a++) for (let b = a + 1; b < ents.length; b++) {
-      if (ents[a].idx !== ents[b].idx && near(ents[a].d + ents[b].d, diff)) pairs.push([ents[a], ents[b]]);
-    }
-    if (pairs.length === 1) return { unique: pairs[0] };
-    if (pairs.length && pairs.length <= 12) return { cands: pairs.reduce((a, p) => a.concat(p), []) };
-    return null;
-  }
-
-  function resolve(out) {
-    out.items.forEach(it => {
-      // If the quantity digit is garbled, the price on the line and the unit price still agree on it.
-      if (it.unitPrice && it.amount != null && !it.discount) {
-        const q = Math.round(it.amount / it.unitPrice);
-        if (q >= 2 && q <= 12 && Math.abs(q * it.unitPrice - it.amount) <= 0.03) it.qty = q;
-      }
-      it.alt = null;
-      if (it.rate && it.weight) it.alt = round2(it.rate * it.weight);
-      else if (it.qty > 1 && it.unitPrice) it.alt = round2(it.qty * it.unitPrice);
-      if (it.amount == null && it.alt != null) { it.amount = it.alt; it.inferred = true; }
-    });
-    const disc = () => round2(out.items.reduce((a, i) => a + (i.discount || 0), 0) + (out.basketDiscount || 0));
-    const total = () => round2(out.items.reduce((a, i) => a + (i.amount || 0), 0) - disc());
-    out.inferredFromTotal = false; out.repaired = 0;
-    const miss = out.items.filter(i => i.amount == null);
-    if (miss.length === 1 && out.subtotal != null) {
-      const v = round2(out.subtotal - total());
-      if (v > 0 && v < 300) { miss[0].amount = v; miss[0].inferred = true; out.inferredFromTotal = true; }
-    }
-    // One misread digit: the quantity or weight line on the same item can give the right price.
-    if (out.subtotal != null && !out.inferredFromTotal && out.items.every(i => i.amount != null) && Math.abs(total() - out.subtotal) >= 0.005) {
-      for (const i of out.items) {
-        if (i.alt != null && Math.abs(i.alt - i.amount) > 0.001 && Math.abs(total() - i.amount + i.alt - out.subtotal) < 0.005) { i.amount = i.alt; i.fixed = true; break; }
-      }
-    }
-    // Still not adding up: look for one or two look-alike digits that would make it add up.
-    if (out.subtotal != null && !out.inferredFromTotal && out.items.length && out.items.every(i => i.amount != null) && Math.abs(total() - out.subtotal) >= 0.005 && out.items.length <= 60) {
-      const fix = repair(out, round2(out.subtotal - total()));
-      if (fix && fix.unique) fix.unique.forEach(e => { e.i.was = e.i.amount; e.i.amount = e.nv; e.i.fixed = true; e.i.digitFix = true; out.repaired++; });
-      else if (fix && fix.cands) {
-        // More than one way to make it add up: do not guess, but point at the lines that could be the problem.
-        fix.cands.forEach(e => { e.i.suggest = (e.i.suggest || []).filter(v => v !== e.nv).concat([e.nv]); });
-        out.suspects = out.items.filter(i => i.suggest).length;
-      }
-    }
-    out.discount = disc();
-    out.sum = total();
-    out.missing = out.items.filter(i => i.amount == null).length;
-    out.checkOk = out.subtotal != null && out.missing === 0 && Math.abs(out.sum - out.subtotal) < 0.005;
-    out.itemCount = out.items.reduce((a, i) => a + (i.qty || 1), 0);
-  }
-
-  // ---- matching to the item list ----
-  // ctx.items: [{store,item,pack,unit,qty,category,avg}], ctx.aliases: [{text,store,item}]
-  function analyse(text, ctx) {
-    const p = parse(text);
-    const store = (ctx && ctx.store) || p.store;
-    const pool = ((ctx && ctx.items) || []).filter(i => !store || i.store === store).map(i => ({ i, t: tokens(i.item), pk: parsePack(i.pack) }));
-    const als = ((ctx && ctx.aliases) || []).filter(a => !store || a.store === store).map(a => ({ a, t: tokens(a.text) }));
-    let rows = p.items.map(it => {
-      const pk = it.rate != null ? { k: "perkg", v: 1, alts: [{ k: "perkg", v: 1 }] } : parsePack(it.desc);
-      const rt = tokens(it.desc);
-      let best = null, bs = 0, viaAlias = false;
-      pool.forEach(c => { const sc = score(rt, c.t); if (sc > bs) { bs = sc; best = c; viaAlias = false; } });
-      als.forEach(c => {
-        const sc = score(rt, c.t);
-        if (sc >= 0.8 && sc >= bs - 0.001) { const hit = pool.find(x => x.i.item === c.a.item); if (hit) { bs = Math.max(sc, bs); best = hit; viaAlias = true; } }
-      });
-      // What the purchase contains, in the unit the matched item is compared by. Different pack sizes of the same item are fine.
-      const sz = best ? sizeFor(pk, best.i) : null;
-      let compat = best ? (packCompat(pk, best.pk) || (sz && sz.how !== "usual")) : true;
-      // A per-kg item bought as a bunch or a pack is not the same thing as a price per kg, unless one piece's weight is known.
-      if (best && compat && best.pk && best.pk.k === "perkg" && it.rate == null && !it.weighed && sz && sz.how === "usual" && /\b(bunch|each|ea|pk|pack)\b|\bp\/p\b/i.test(it.desc)) compat = false;
-      // An identical pack size (500g and 500g, say) is extra evidence the two are the same product.
-      const bonus = best && compat && pk && best.pk && (pk.k === "g" || pk.k === "ml" || pk.k === "n") ? 0.15 : 0;
-      const eff = Math.min(1, bs + bonus);
-      let status = "new";
-      if (best && viaAlias) status = "alias";
-      else if (best && eff >= 0.7 && compat) status = "auto";
-      else if (best && eff >= 0.55 && compat) status = "maybe";
-      else if (best && eff >= 0.85) status = "maybe";
-      const name = pretty(it.desc) || it.desc;
-      // Sold by weight, but no weight line was read: the line total is not a price per kg, so ask for it.
-      // A per-kg item with a pack size on the receipt (a 500g zucchini) is a pack price, not a weight price.
-      const weighed = it.rate == null && (it.weighed || !!(best && (status === "auto" || status === "alias") && best.pk && best.pk.k === "perkg" && !(sz && sz.how !== "usual" && !(pk && pk.k === "perkg"))));
-      const net = it.amount != null ? round2(it.amount - (it.discount || 0)) : null;
-      let price = null, note = [];
-      if (it.rate != null) price = it.rate;
-      else if (weighed) { price = null; note.push("Sold by weight. Type the price per kg from the shelf label, or leave it out."); }
-      else if (it.qty > 1) price = it.discount ? (net != null ? round2(net / it.qty) : null) : (it.unitPrice != null ? it.unitPrice : (it.amount != null ? round2(it.amount / it.qty) : null));
-      else price = net;
-      if (it.discount && price != null && !weighed && it.rate == null) {
-        const shelf = it.amount != null ? round2(it.amount / (it.qty || 1)) : null;
-        note.push("Price is after a " + (it.promo ? it.promo.replace(/\s+/g, " ") + " " : "promo ") + "saving of $" + it.discount.toFixed(2) + (shelf != null ? " (shelf price $" + shelf.toFixed(2) + ")" : "") + ".");
-      }
-      if (it.discountUnread) note.push("A discount line under this item could not be read. Check the price.");
-      if (best && status !== "new" && !compat) note.push("Pack differs: " + (it.rate != null ? "sold per kg" : "this receipt says " + (it.desc.match(/\d[\d.]*\s?(?:x\s?\d[\d.]*\s?)?(?:kg|g|ml|l|pk)\b|\bea\b|\beach\b/i) || ["a different pack"])[0].replace(/\s+/g, "")) + ", your list has " + best.i.pack + ".");
-      const mi0 = best && status !== "new" ? best.i : null;
-      let size = null, info = [], needEach = false;
-      if (mi0 && sz) {
-        size = sz.size;
-        if (sz.how === "needEach") {
-          needEach = true;
-          note.push(mi0.item + " is compared " + (mi0.unit === "L" ? "per L" : "per " + mi0.unit) + ", but this line is counted, not weighed. Under Edit details, enter what one piece " + (mi0.unit === "L" ? "holds" : "weighs") + " (in " + mi0.unit + ").");
-        } else if (sz.how === "each") info.push((sz.n || 1) + " x " + mi0.each + " " + mi0.unit + " each = " + size + " " + mi0.unit);
-        else if (sz.how === "receipt" && mi0.qty && Math.abs(size - Number(mi0.qty)) > 1e-9) info.push("Pack is " + size + " " + mi0.unit + " here (usual " + mi0.qty + ")");
-      }
-      if (it.amount == null) note.push("Price was unreadable. Check it.");
-      else if (it.digitFix) note.push("Price looked misread (" + money2(it.was) + "). Changed to " + money2(it.amount) + " so the receipt adds up. Check it.");
-      else if (it.inferred) note.push("Price was unreadable and was worked out. Check it.");
-      if (it.suggest && it.suggest.length) note.push("Might be misread. If so, " + it.suggest.slice(0, 2).map(money2).join(" or ") + " would make the receipt add up.");
-      const ni = newItemFor(pk, name, weighed || it.rate != null);
-      const mi = best && status !== "new" ? best.i : null;
-      if (!mi) size = ni.qty;
-      return {
-        raw: it.raw, desc: it.desc, qty: it.qty, amount: it.amount, weighed, hasRate: it.rate != null,
-        status, matched: best ? best.i.item : null, perkg: !!(best && best.pk && best.pk.k === "perkg"), avg: best ? best.i.avg || null : null, score: Math.round(bs * 100) / 100, compat,
-        item: (status === "new" || !best) ? name : best.i.item,
-        category: mi ? mi.category : guessCategory(name),
-        newItem: ni,
-        cur: mi ? { category: mi.category || "", pack: mi.pack || "", unit: mi.unit || "", qty: mi.qty == null ? "" : mi.qty, each: mi.each == null ? "" : mi.each } : null,
-        pk: pk ? { alts: pk.alts || [pk] } : null, size, info, needEach,
-        price, note, discount: it.discount || 0, fixed: !!it.fixed,
-        on: (status === "auto" || status === "alias") && price != null && !needEach
-      };
-    });
-    // The same product on two lines at the same price (Costco prints each one separately) becomes one row.
-    const merged = [];
-    rows.forEach(r => {
-      const twin = merged.find(m => m.desc.toLowerCase() === r.desc.toLowerCase() && m.price != null && m.price === r.price && !m.weighed && !m.hasRate);
-      if (twin) {
-        twin.qty += r.qty; twin.lines += 1;
-        twin.note = twin.note.filter(n => !/^Appears on/.test(n)).concat(["Appears on " + twin.lines + " lines at the same price. Logged once."]);
-      } else { r.lines = 1; merged.push(r); }
-    });
-    rows = merged;
-    // If the receipt says more items than were read, a "Qty 3 @" line was probably missed. Use the usual price to spot which row.
-    const deficit = p.count != null ? p.count - p.itemCount : 0;
-    if (deficit > 0) {
-      const cands = [];
-      rows.forEach(r => {
-        if (r.qty !== 1 || r.hasRate || r.weighed || r.perkg || r.amount == null || !r.avg || r.status === "new") return;
-        for (let k = 2; k <= deficit + 1; k++) {
-          const err = Math.abs(r.amount / k - r.avg) / r.avg;
-          if (err <= 0.08 && Math.abs(r.amount - r.avg) / r.avg > 0.4) { cands.push({ r, k, err }); break; }
+      if (!am.length) {
+        // A name line: product names are printed in capitals. The reader adds junk beside them, so judge each piece on its own.
+        const cand = s.split(/\s{3,}|\t/).map(x => x.trim()).filter(x => (x.match(/[A-Z]/g) || []).length >= 4 && (x.match(/[a-z]/g) || []).length <= 1 && letters(x) >= 5);
+        if (cand.length) {
+          const nm = cand.reduce((a, b) => letters(b) >= letters(a) ? b : a).replace(/^[^A-Za-z0-9&(]+/, "").replace(/[\s|\\:;.,]+$/, "");
+          flush(); pending = nm; pendingTpd = /^tpd\b/i.test(nm);
         }
-      });
-      // Only act when exactly one row explains the missing items, otherwise leave it and let the page warn.
-      const fits = cands.filter(c => c.k - 1 === deficit);
-      if (fits.length === 1 && cands.length === 1) {
-        const c = fits[0];
-        c.r.qty = c.k; c.r.price = round2(c.r.amount / c.k);
-        c.r.note.push("Looks like " + c.k + " were bought: price per item worked out.");
+        else if (pendingTpd && /\d{4,}/.test(s)) { if (cur) cur.discountUnread = true; pending = null; pendingTpd = false; }
+        continue;
+      }
+      const last = am[am.length - 1];
+      if (last.v < 0 || pendingTpd) {
+        const d = Math.abs(last.v);
+        if (cur) { cur.discount = round2(cur.discount + d); cur.promo = pending ? pending.replace(/&|\s+$/g, "").trim() : "price drop"; }
+        pending = null; pendingTpd = false; continue;
+      }
+      if (pending) {
+        const it = mk(pending, pending, last.v);
+        const xm = s.match(/(?:^|\s)([0-9Il])\s*x\s/i);
+        const unit = am.length >= 2 ? am[0].v : null;
+        let q = xm ? (/[0-9]/.test(xm[1]) ? parseInt(xm[1], 10) : 1) : 1;
+        if (unit && unit > 0) { const r = Math.round(last.v / unit); if (r >= 1 && r <= 12 && Math.abs(r * unit - last.v) <= 0.03) q = r; }
+        it.qty = q; it.unitPrice = unit && q > 1 ? unit : null;
+        out.items.push(it); cur = it; pending = null; pendingTpd = false;
       }
     }
-    const itemCount = p.items.reduce((a, i) => a + (i.qty || 1), 0);
-    return { store: store || null, profile: p.profile, date: p.date, rows, subtotal: p.subtotal, total: p.total, sum: p.sum, checkOk: p.checkOk, inferredFromTotal: p.inferredFromTotal,
-      repaired: p.repaired, suspects: p.suspects || 0, discount: p.discount, basketDiscount: p.basketDiscount, missing: p.missing, count: p.count, itemCount,
-      countOk: p.count == null ? null : itemCount === p.count };
-  }
-  // How trustworthy a reading is, for choosing between passes over the same photo. 4 is exact; lower is worse.
-  function rank(r) {
-    if (!r.rows.length) return -1;
-    const countOk = r.countOk !== false;
-    if (r.checkOk && !r.inferredFromTotal && countOk) return 4;
-    if (r.checkOk && countOk) return 3;
-    if (r.checkOk) return 2;
-    if (r.subtotal == null) return 0.5 + Math.min(r.rows.length, 60) / 200 - r.missing * 0.02;
-    const cd = r.count != null ? Math.abs(r.count - r.itemCount) : 0;
-    return 1 - Math.min(0.99, (r.missing * 5 + cd * 8 + Math.min(Math.abs((r.sum || 0) - r.subtotal), 100) / 5) / 100);
-  }
-  const money2 = n => "$" + Number(n).toFixed(2);
+    flush();
+  };
+  run(true);
+  if (!out.items.length) run(false);
+}
 
-  // Several readings of one photo: fill gaps and outvote single misreads, line by line.
-  // results[0] is the best reading; the rest are the other passes.
-  function consensus(results) {
-    const base = results[0];
-    if (!base || results.length < 2 || base.rows.length === 0) return base;
-    let delta = 0, filled = 0, outvoted = 0;
-    base.rows.forEach(r => {
-      if (r.weighed || r.hasRate || r.fixed) return;
-      const votes = new Map();
-      const add = x => { if (x.price == null || x.amount == null) return; const k = x.price.toFixed(2); const v = votes.get(k) || { n: 0, price: x.price, amount: x.amount }; v.n++; votes.set(k, v); };
-      add(r);
-      const rt = tokens(r.desc);
-      results.slice(1).forEach(o => {
-        let m = null, bs = 0;
-        o.rows.forEach(x => { if (x.weighed || x.hasRate || x.qty !== r.qty) return; const sc = score(rt, tokens(x.desc)); if (sc > bs) { bs = sc; m = x; } });
-        if (m && bs >= 0.8) add(m);
-      });
-      if (!votes.size) return;
-      const mine = r.price != null ? votes.get(r.price.toFixed(2)) : null;
-      let win = null; votes.forEach(v => { if (!win || v.n > win.n) win = v; });
-      if (r.price == null) {
-        r.price = win.price; r.amount = win.amount; filled++; delta += win.amount * (r.lines || 1);
-        r.note = r.note.filter(n => !/^Price was unreadable/.test(n)).concat(["Price was unreadable in the first reading and was taken from another. Check it."]);
-        r.on = r.on || (r.status === "auto" || r.status === "alias");
-      } else if (mine && win.n > mine.n) {
-        delta += (win.amount - r.amount) * (r.lines || 1);
-        r.note = r.note.concat(["Read as " + money2(r.price) + " once and " + money2(win.price) + " more often. Using " + money2(win.price) + "."]);
-        r.price = win.price; r.amount = win.amount; outvoted++;
-      } else if (votes.size > 1 && !r.discount) {
-        const other = [...votes.values()].find(v => v !== mine);
-        if (other) r.note = r.note.concat(["Another reading gave " + money2(other.price) + ". Check it."]);
+// Receipt text to a list of lines.
+function parse(text) {
+  const lines = String(text || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  const out = { store: null, profile: null, date: null, items: [], subtotal: null, total: null, count: null, basketDiscount: 0 };
+  const d = detect(lines); out.store = d.store; out.profile = d.p;
+  if (d.p === "costco") parseCostco(lines, out);
+  else if (d.p === "woolworths") parseWoolworths(lines, out);
+  else if (d.p === "coles") parseColes(lines, out);
+  else parseAldi(lines, out);
+  // No total line was read: take the card amount if there is one.
+  if (out.subtotal == null) {
+    for (const raw of lines) {
+      const s = clean(raw);
+      if (/card\s*sales|^eft\b|purchase\b/i.test(s)) { const a = amounts(s).filter(x => x.v > 0).pop(); if (a) { out.subtotal = a.v; break; } }
+    }
+  }
+  resolve(out);
+  return out;
+}
+
+// Checking the sums and repairing misread digits.
+// OCR mistakes are usually one look-alike digit: 3 for 8, 1 for 4, 5 for 8 and so on.
+const LOOK = { "0": "869", "1": "47", "2": "7", "3": "85", "4": "19", "5": "6839", "6": "580", "7": "12", "8": "3056", "9": "4805" };
+function altsOf(v) {
+  const str = Math.abs(v).toFixed(2).replace(".", ""), out = new Map();
+  for (let i = 0; i < str.length; i++) for (const r of (LOOK[str[i]] || "")) {
+    const t = str.slice(0, i) + r + str.slice(i + 1);
+    if (i === 0 && r === "0" && str.length > 3) continue;
+    const nv = round2(parseInt(t, 10) / 100); if (nv !== Math.abs(v)) out.set(nv, true);
+  }
+  return [...out.keys()];
+}
+function repair(out, diff) {
+  // diff is how much the receipt total is above the lines. Each entry shows how much a changed digit would move the sum.
+  const ents = [];
+  out.items.forEach((i, idx) => { if (i.amount != null && i.rate == null) altsOf(i.amount).forEach(nv => ents.push({ i, nv, d: round2(nv - i.amount), idx })); });
+  const near = (a, b) => Math.abs(a - b) < 0.005;
+  const singles = ents.filter(e => near(e.d, diff));
+  if (singles.length === 1) return { unique: [singles[0]] };
+  if (singles.length > 1) return { cands: singles.slice(0, 8) };
+  const pairs = [];
+  for (let a = 0; a < ents.length; a++) for (let b = a + 1; b < ents.length; b++) {
+    if (ents[a].idx !== ents[b].idx && near(ents[a].d + ents[b].d, diff)) pairs.push([ents[a], ents[b]]);
+  }
+  if (pairs.length === 1) return { unique: pairs[0] };
+  if (pairs.length && pairs.length <= 12) return { cands: pairs.reduce((a, p) => a.concat(p), []) };
+  return null;
+}
+
+function resolve(out) {
+  out.items.forEach(it => {
+    // If the quantity digit is garbled, the price on the line and the unit price still agree on it.
+    if (it.unitPrice && it.amount != null && !it.discount) {
+      const q = Math.round(it.amount / it.unitPrice);
+      if (q >= 2 && q <= 12 && Math.abs(q * it.unitPrice - it.amount) <= 0.03) it.qty = q;
+    }
+    it.alt = null;
+    if (it.rate && it.weight) it.alt = round2(it.rate * it.weight);
+    else if (it.qty > 1 && it.unitPrice) it.alt = round2(it.qty * it.unitPrice);
+    if (it.amount == null && it.alt != null) { it.amount = it.alt; it.inferred = true; }
+  });
+  const disc = () => round2(out.items.reduce((a, i) => a + (i.discount || 0), 0) + (out.basketDiscount || 0));
+  const total = () => round2(out.items.reduce((a, i) => a + (i.amount || 0), 0) - disc());
+  out.inferredFromTotal = false; out.repaired = 0;
+  const miss = out.items.filter(i => i.amount == null);
+  if (miss.length === 1 && out.subtotal != null) {
+    const v = round2(out.subtotal - total());
+    if (v > 0 && v < 300) { miss[0].amount = v; miss[0].inferred = true; out.inferredFromTotal = true; }
+  }
+  // One misread digit: the quantity or weight line on the same item can give the right price.
+  if (out.subtotal != null && !out.inferredFromTotal && out.items.every(i => i.amount != null) && Math.abs(total() - out.subtotal) >= 0.005) {
+    for (const i of out.items) {
+      if (i.alt != null && Math.abs(i.alt - i.amount) > 0.001 && Math.abs(total() - i.amount + i.alt - out.subtotal) < 0.005) { i.amount = i.alt; i.fixed = true; break; }
+    }
+  }
+  // Still not adding up: look for one or two look-alike digits that would make it add up.
+  if (out.subtotal != null && !out.inferredFromTotal && out.items.length && out.items.every(i => i.amount != null) && Math.abs(total() - out.subtotal) >= 0.005 && out.items.length <= 60) {
+    const fix = repair(out, round2(out.subtotal - total()));
+    if (fix && fix.unique) fix.unique.forEach(e => { e.i.was = e.i.amount; e.i.amount = e.nv; e.i.fixed = true; e.i.digitFix = true; out.repaired++; });
+    else if (fix && fix.cands) {
+      // More than one way to make it add up: do not guess, but point at the lines that could be the problem.
+      fix.cands.forEach(e => { e.i.suggest = (e.i.suggest || []).filter(v => v !== e.nv).concat([e.nv]); });
+      out.suspects = out.items.filter(i => i.suggest).length;
+    }
+  }
+  out.discount = disc();
+  out.sum = total();
+  out.missing = out.items.filter(i => i.amount == null).length;
+  out.checkOk = out.subtotal != null && out.missing === 0 && Math.abs(out.sum - out.subtotal) < 0.005;
+  out.itemCount = out.items.reduce((a, i) => a + (i.qty || 1), 0);
+}
+
+// Matching lines to the item list.
+// ctx.items: [{store,item,pack,unit,qty,category,avg}], ctx.aliases: [{text,store,item}]
+function analyse(text, ctx) {
+  const p = parse(text);
+  const store = (ctx && ctx.store) || p.store;
+  const pool = ((ctx && ctx.items) || []).filter(i => !store || i.store === store).map(i => ({ i, t: tokens(i.item), pk: parsePack(i.pack) }));
+  const als = ((ctx && ctx.aliases) || []).filter(a => !store || a.store === store).map(a => ({ a, t: tokens(a.text) }));
+  let rows = p.items.map(it => {
+    const pk = it.rate != null ? { k: "perkg", v: 1, alts: [{ k: "perkg", v: 1 }] } : parsePack(it.desc);
+    const rt = tokens(it.desc);
+    let best = null, bs = 0, viaAlias = false;
+    pool.forEach(c => { const sc = score(rt, c.t); if (sc > bs) { bs = sc; best = c; viaAlias = false; } });
+    als.forEach(c => {
+      const sc = score(rt, c.t);
+      if (sc >= 0.8 && sc >= bs - 0.001) { const hit = pool.find(x => x.i.item === c.a.item); if (hit) { bs = Math.max(sc, bs); best = hit; viaAlias = true; } }
+    });
+    // What the purchase contains, in the unit the matched item is compared by. Different pack sizes of the same item are fine.
+    const sz = best ? sizeFor(pk, best.i) : null;
+    let compat = best ? (packCompat(pk, best.pk) || (sz && sz.how !== "usual")) : true;
+    // A per-kg item bought as a bunch or a pack is not the same thing as a price per kg, unless one piece's weight is known.
+    if (best && compat && best.pk && best.pk.k === "perkg" && it.rate == null && !it.weighed && sz && sz.how === "usual" && /\b(bunch|each|ea|pk|pack)\b|\bp\/p\b/i.test(it.desc)) compat = false;
+    // An identical pack size (500g and 500g, say) is extra evidence the two are the same product.
+    const bonus = best && compat && pk && best.pk && (pk.k === "g" || pk.k === "ml" || pk.k === "n") ? 0.15 : 0;
+    const eff = Math.min(1, bs + bonus);
+    let status = "new";
+    if (best && viaAlias) status = "alias";
+    else if (best && eff >= 0.7 && compat) status = "auto";
+    else if (best && eff >= 0.55 && compat) status = "maybe";
+    else if (best && eff >= 0.85) status = "maybe";
+    const name = pretty(it.desc) || it.desc;
+    // Sold by weight, but no weight line was read: the line total is not a price per kg, so ask for it.
+    // A per-kg item with a pack size on the receipt (a 500g zucchini) is a pack price, not a weight price.
+    const weighed = it.rate == null && (it.weighed || !!(best && (status === "auto" || status === "alias") && best.pk && best.pk.k === "perkg" && !(sz && sz.how !== "usual" && !(pk && pk.k === "perkg"))));
+    const net = it.amount != null ? round2(it.amount - (it.discount || 0)) : null;
+    let price = null, note = [];
+    if (it.rate != null) price = it.rate;
+    else if (weighed) { price = null; note.push("Sold by weight. Type the price per kg from the shelf label, or leave it out."); }
+    else if (it.qty > 1) price = it.discount ? (net != null ? round2(net / it.qty) : null) : (it.unitPrice != null ? it.unitPrice : (it.amount != null ? round2(it.amount / it.qty) : null));
+    else price = net;
+    if (it.discount && price != null && !weighed && it.rate == null) {
+      const shelf = it.amount != null ? round2(it.amount / (it.qty || 1)) : null;
+      note.push("Price is after a " + (it.promo ? it.promo.replace(/\s+/g, " ") + " " : "promo ") + "saving of $" + it.discount.toFixed(2) + (shelf != null ? " (shelf price $" + shelf.toFixed(2) + ")" : "") + ".");
+    }
+    if (it.discountUnread) note.push("A discount line under this item could not be read. Check the price.");
+    if (best && status !== "new" && !compat) note.push("Pack differs: " + (it.rate != null ? "sold per kg" : "this receipt says " + (it.desc.match(/\d[\d.]*\s?(?:x\s?\d[\d.]*\s?)?(?:kg|g|ml|l|pk)\b|\bea\b|\beach\b/i) || ["a different pack"])[0].replace(/\s+/g, "")) + ", your list has " + best.i.pack + ".");
+    const mi0 = best && status !== "new" ? best.i : null;
+    let size = null, info = [], needEach = false;
+    if (mi0 && sz) {
+      size = sz.size;
+      if (sz.how === "needEach") {
+        needEach = true;
+        note.push(mi0.item + " is compared " + (mi0.unit === "L" ? "per L" : "per " + mi0.unit) + ", but this line is counted, not weighed. Under Edit details, enter what one piece " + (mi0.unit === "L" ? "holds" : "weighs") + " (in " + mi0.unit + ").");
+      } else if (sz.how === "each") info.push((sz.n || 1) + " x " + mi0.each + " " + mi0.unit + " each = " + size + " " + mi0.unit);
+      else if (sz.how === "receipt" && mi0.qty && Math.abs(size - Number(mi0.qty)) > 1e-9) info.push("Pack is " + size + " " + mi0.unit + " here (usual " + mi0.qty + ")");
+    }
+    if (it.amount == null) note.push("Price was unreadable. Check it.");
+    else if (it.digitFix) note.push("Price looked misread (" + money2(it.was) + "). Changed to " + money2(it.amount) + " so the receipt adds up. Check it.");
+    else if (it.inferred) note.push("Price was unreadable and was worked out. Check it.");
+    if (it.suggest && it.suggest.length) note.push("Might be misread. If so, " + it.suggest.slice(0, 2).map(money2).join(" or ") + " would make the receipt add up.");
+    const ni = newItemFor(pk, name, weighed || it.rate != null);
+    const mi = best && status !== "new" ? best.i : null;
+    if (!mi) size = ni.qty;
+    return {
+      raw: it.raw, desc: it.desc, qty: it.qty, amount: it.amount, weighed, hasRate: it.rate != null,
+      status, matched: best ? best.i.item : null, perkg: !!(best && best.pk && best.pk.k === "perkg"), avg: best ? best.i.avg || null : null, score: Math.round(bs * 100) / 100, compat,
+      item: (status === "new" || !best) ? name : best.i.item,
+      category: mi ? mi.category : guessCategory(name),
+      newItem: ni,
+      cur: mi ? { category: mi.category || "", pack: mi.pack || "", unit: mi.unit || "", qty: mi.qty == null ? "" : mi.qty, each: mi.each == null ? "" : mi.each } : null,
+      pk: pk ? { alts: pk.alts || [pk] } : null, size, info, needEach,
+      price, note, discount: it.discount || 0, fixed: !!it.fixed,
+      on: (status === "auto" || status === "alias") && price != null && !needEach
+    };
+  });
+  // The same product on two lines at the same price (Costco prints each one separately) becomes one row.
+  const merged = [];
+  rows.forEach(r => {
+    const twin = merged.find(m => m.desc.toLowerCase() === r.desc.toLowerCase() && m.price != null && m.price === r.price && !m.weighed && !m.hasRate);
+    if (twin) {
+      twin.qty += r.qty; twin.lines += 1;
+      twin.note = twin.note.filter(n => !/^Appears on/.test(n)).concat(["Appears on " + twin.lines + " lines at the same price. Logged once."]);
+    } else { r.lines = 1; merged.push(r); }
+  });
+  rows = merged;
+  // If the receipt says more items than were read, a "Qty 3 @" line was probably missed. Use the usual price to spot which row.
+  const deficit = p.count != null ? p.count - p.itemCount : 0;
+  if (deficit > 0) {
+    const cands = [];
+    rows.forEach(r => {
+      if (r.qty !== 1 || r.hasRate || r.weighed || r.perkg || r.amount == null || !r.avg || r.status === "new") return;
+      for (let k = 2; k <= deficit + 1; k++) {
+        const err = Math.abs(r.amount / k - r.avg) / r.avg;
+        if (err <= 0.08 && Math.abs(r.amount - r.avg) / r.avg > 0.4) { cands.push({ r, k, err }); break; }
       }
     });
-    if (filled || outvoted) {
-      base.missing = base.rows.filter(r => r.amount == null).length;
-      base.sum = round2((base.sum || 0) + delta);
-      if (base.subtotal != null) base.checkOk = base.missing === 0 && Math.abs(base.sum - base.subtotal) < 0.005;
-      base.merged = filled + outvoted;
+    // Only act when exactly one row explains the missing items, otherwise leave it and let the page warn.
+    const fits = cands.filter(c => c.k - 1 === deficit);
+    if (fits.length === 1 && cands.length === 1) {
+      const c = fits[0];
+      c.r.qty = c.k; c.r.price = round2(c.r.amount / c.k);
+      c.r.note.push("Looks like " + c.k + " were bought: price per item worked out.");
     }
-    return base;
   }
+  const itemCount = p.items.reduce((a, i) => a + (i.qty || 1), 0);
+  return { store: store || null, profile: p.profile, date: p.date, rows, subtotal: p.subtotal, total: p.total, sum: p.sum, checkOk: p.checkOk, inferredFromTotal: p.inferredFromTotal,
+    repaired: p.repaired, suspects: p.suspects || 0, discount: p.discount, basketDiscount: p.basketDiscount, missing: p.missing, count: p.count, itemCount,
+    countOk: p.count == null ? null : itemCount === p.count };
+}
+// How trustworthy a reading is, for choosing between passes over the same photo. 4 is exact; lower is worse.
 
-  return { sizeFor, rank, consensus, parse, analyse, parsePack, packCompat, tokens, score, pretty, guessCategory, newItemFor };
+// Choosing between, and combining, several readings of one photo.
+function rank(r) {
+  if (!r.rows.length) return -1;
+  const countOk = r.countOk !== false;
+  if (r.checkOk && !r.inferredFromTotal && countOk) return 4;
+  if (r.checkOk && countOk) return 3;
+  if (r.checkOk) return 2;
+  if (r.subtotal == null) return 0.5 + Math.min(r.rows.length, 60) / 200 - r.missing * 0.02;
+  const cd = r.count != null ? Math.abs(r.count - r.itemCount) : 0;
+  return 1 - Math.min(0.99, (r.missing * 5 + cd * 8 + Math.min(Math.abs((r.sum || 0) - r.subtotal), 100) / 5) / 100);
+}
+const money2 = n => "$" + Number(n).toFixed(2);
+
+// Several readings of one photo: fill gaps and outvote single misreads, line by line.
+// results[0] is the best reading; the rest are the other passes.
+function consensus(results) {
+  const base = results[0];
+  if (!base || results.length < 2 || base.rows.length === 0) return base;
+  let delta = 0, filled = 0, outvoted = 0;
+  base.rows.forEach(r => {
+    if (r.weighed || r.hasRate || r.fixed) return;
+    const votes = new Map();
+    const add = x => { if (x.price == null || x.amount == null) return; const k = x.price.toFixed(2); const v = votes.get(k) || { n: 0, price: x.price, amount: x.amount }; v.n++; votes.set(k, v); };
+    add(r);
+    const rt = tokens(r.desc);
+    results.slice(1).forEach(o => {
+      let m = null, bs = 0;
+      o.rows.forEach(x => { if (x.weighed || x.hasRate || x.qty !== r.qty) return; const sc = score(rt, tokens(x.desc)); if (sc > bs) { bs = sc; m = x; } });
+      if (m && bs >= 0.8) add(m);
+    });
+    if (!votes.size) return;
+    const mine = r.price != null ? votes.get(r.price.toFixed(2)) : null;
+    let win = null; votes.forEach(v => { if (!win || v.n > win.n) win = v; });
+    if (r.price == null) {
+      r.price = win.price; r.amount = win.amount; filled++; delta += win.amount * (r.lines || 1);
+      r.note = r.note.filter(n => !/^Price was unreadable/.test(n)).concat(["Price was unreadable in the first reading and was taken from another. Check it."]);
+      r.on = r.on || (r.status === "auto" || r.status === "alias");
+    } else if (mine && win.n > mine.n) {
+      delta += (win.amount - r.amount) * (r.lines || 1);
+      r.note = r.note.concat(["Read as " + money2(r.price) + " once and " + money2(win.price) + " more often. Using " + money2(win.price) + "."]);
+      r.price = win.price; r.amount = win.amount; outvoted++;
+    } else if (votes.size > 1 && !r.discount) {
+      const other = [...votes.values()].find(v => v !== mine);
+      if (other) r.note = r.note.concat(["Another reading gave " + money2(other.price) + ". Check it."]);
+    }
+  });
+  if (filled || outvoted) {
+    base.missing = base.rows.filter(r => r.amount == null).length;
+    base.sum = round2((base.sum || 0) + delta);
+    if (base.subtotal != null) base.checkOk = base.missing === 0 && Math.abs(base.sum - base.subtotal) < 0.005;
+    base.merged = filled + outvoted;
+  }
+  return base;
+}
+
+return { sizeFor, rank, consensus, parse, analyse, parsePack, packCompat, tokens, score, pretty, guessCategory, newItemFor };
 })();
 if (typeof module !== "undefined" && module.exports) module.exports = ReceiptLib;
 
-
-// ---- helpers ----
+// Small helpers: DOM lookup, escaping, dates, money, keys and the toast message.
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const pad = n => String(n).padStart(2, "0");
+const today = () => { const d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
+const money = n => "$" + n.toFixed(2);
+const unitLabel = u => !u ? "unit missing" : u === "ea" ? "each" : "per " + u;
+const uid = () => "g" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const fmtDay = iso => new Date(iso).toLocaleDateString("en-AU", { day: "numeric", month: "short" });
+const fmtD = s => new Date(s + "T00:00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "2-digit" });
+const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
+const key = (s, i) => s + "|" + i;
+const aliasKey = a => [a.store, a.item, String(a.text).toLowerCase()].join("|");
+
+
+let toastTimer;
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("on"), 3400);
+}
+
+const plural = (n, word) => n + " " + word + (n === 1 ? "" : "s");
+const optionList = values => values.map(v => `<option value="${esc(v)}">`).join("");
+
+// ---- units ----
+// What an item can be compared by. The first value is stored in the sheet, the second is what people read.
+const UNITS = [["kg", "per kg"], ["L", "per L"], ["100g", "per 100g"], ["ea", "each"], ["egg", "per egg"], ["roll", "per roll"], ["can", "per can"],
+  ["tablet", "per tablet"], ["capsule", "per capsule"], ["sachet", "per sachet"], ["bag", "per bag"], ["box", "per box"]];
+const sizeLabel = u => ({ kg: "kg", L: "L", "100g": "x 100g", ea: "items", egg: "eggs", can: "cans", roll: "rolls", tablet: "tablets", capsule: "capsules", sachet: "sachets", bag: "bags", box: "boxes" })[u] || u || "units";
+const isMeasure = u => u === "kg" || u === "L" || u === "100g";
+function unitOptions(cur) {
+  const list = UNITS.slice(); if (cur && !list.some(u => u[0] === cur)) list.push([cur, "per " + cur]);
+  return list.map(([v, l]) => `<option value="${esc(v)}"${v === cur ? " selected" : ""}>${esc(l)}</option>`).join("");
+}
+
+// Saving on the phone: localStorage, with IndexedDB and a cookie as backups.
 // Phones sometimes drop saved website data. The sign-in and the unsent prices are therefore also kept in a second store (IndexedDB),
 // and the sign-in in a long-lived cookie, and put back if the first copy has gone.
 const MIRROR = ["gi2_set", "gi2_pending", "gi2_alias", "gi2_edits"];
@@ -968,18 +1068,8 @@ const LS = {
     return ok;
   }
 };
-const pad = n => String(n).padStart(2, "0");
-const today = () => { const d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
-const money = n => "$" + n.toFixed(2);
-const unitLabel = u => !u ? "unit missing" : u === "ea" ? "each" : "per " + u;
-const uid = () => "g" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-const fmtDay = iso => new Date(iso).toLocaleDateString("en-AU", { day: "numeric", month: "short" });
-const fmtD = s => new Date(s + "T00:00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "2-digit" });
-const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
-const key = (s, i) => s + "|" + i;
-const aliasKey = a => [a.store, a.item, String(a.text).toLowerCase()].join("|");
 
-// ---- state ----
+// The page state: sheet data, unsent work, filters and settings.
 let ITEMS = [], LOG = [], META = "";
 let PENDING = LS.get("gi2_pending", []);
 let SET = LS.get("gi2_set", {});
@@ -991,13 +1081,7 @@ const open = new Set();
 const api = () => SET.api || CONFIG.API_URL || "";
 const configured = () => !!api() && !!SET.key;
 
-let toastTimer;
-function toast(msg) {
-  const t = $("#toast"); t.textContent = msg; t.classList.add("on");
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("on"), 3400);
-}
-
-// ---- data ----
+// Turns the sheet rows and unsent prices into per-item statistics.
 function loadLocal() {
   const c = LS.get("gi2_cache", null);
   if (c && c.items) { ITEMS = c.items; LOG = c.log; META = "Updated " + fmtDay(c.at); }
@@ -1063,7 +1147,7 @@ function cheaper(e) {
   return best;
 }
 
-// ---- view ----
+// The item list: filters, cards, price history chart and the top bar.
 function chips() {
   const all = [...STAT.values()];
   const stores = ["All", ...new Set(all.map(e => e.store))];
@@ -1109,8 +1193,6 @@ function chart(pts) {
     <text class="ax" x="${L}" y="${H - 6}">${mo(t0)}</text><text class="ax" x="${W - R}" y="${H - 6}" text-anchor="end">${mo(t1)}</text></svg>`;
 }
 
-const sizeLabel = u => ({ kg: "kg", L: "L", "100g": "x 100g", ea: "items", egg: "eggs", can: "cans", roll: "rolls", tablet: "tablets", capsule: "capsules", sachet: "sachets", bag: "bags", box: "boxes" })[u] || u || "units";
-const isMeasure = u => u === "kg" || u === "L" || u === "100g";
 function moreHtml(e) {
   const n = e.pts.length;
   const kv = (a, b) => `<div class="kv"><span>${a}</span><span>${b}</span></div>`;
@@ -1170,7 +1252,29 @@ function updateTop() {
 
 function recalc() { build(); chips(); apply(); updateTop(); }
 
-// ---- adding prices ----
+// ---- events ----
+
+$("#q").addEventListener("input", e => { q = e.target.value; apply(); });
+$("#clr").addEventListener("click", () => { q = ""; $("#q").value = ""; apply(); $("#q").focus(); });
+$("#sort").addEventListener("change", e => { sort = e.target.value; apply(); });
+
+$("#stores").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; store = b.dataset.s; chips(); apply(); });
+$("#cats").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  if (b.dataset.pop) { popOnly = !popOnly; if (popOnly) { sort = "pop"; $("#sort").value = "pop"; } }
+  else cat = b.dataset.c;
+  chips(); apply();
+});
+$("#list").addEventListener("click", e => {
+  const c = e.target.closest(".card"); if (!c) return;
+  if (e.target.closest(".save")) { savePrice(c); return; }
+  if (e.target.closest(".more")) return;
+  const k = c.dataset.k;
+  if (open.has(k)) { open.delete(k); c.classList.remove("open"); c.querySelector(".more").innerHTML = ""; }
+  else { open.add(k); c.classList.add("open"); c.querySelector(".more").innerHTML = moreHtml(STAT.get(k)); }
+});
+
+// Logging a price from an item card.
 function addPending(p, newItem, size) {
   PENDING.push(Object.assign({ id: uid(), who: SET.who || "" }, p, size ? { size } : {}, newItem ? { newItem } : {}));
   const ok = LS.set("gi2_pending", PENDING);
@@ -1187,7 +1291,21 @@ function savePrice(card) {
   addPending(Object.assign({ store: e.store, item: e.item, price: Math.round(v * 100) / 100, date }, sz > 0 ? { size: sz } : {}));
 }
 
-// ---- sync ----
+// ---- events ----
+
+$("#list").addEventListener("input", e => {
+  if (!e.target.classList.contains("pin") && !e.target.classList.contains("psz")) return;
+  const c = e.target.closest(".card"), d = STAT.get(c.dataset.k), out = c.querySelector(".verdict"), v = parseFloat(c.querySelector(".pin").value);
+  if (isNaN(v) || !d || !d.pts.length) { out.textContent = ""; out.className = "verdict"; return; }
+  // Compare per unit when the item has one, so a different pack size is allowed for.
+  const szEl = c.querySelector(".psz"), sz = szEl ? parseFloat(szEl.value) : NaN;
+  const perUnit = d.up != null && sz > 0, mine = perUnit ? v / sz : v, ref = perUnit ? d.up : d.avg;
+  const p = (mine - ref) / ref, pc = Math.round(Math.abs(p) * 100), what = perUnit ? money(mine) + " " + unitLabel(d.unit) : money(v);
+  if (pc < 2) { out.textContent = "About your usual price (" + money(ref) + (perUnit ? " " + unitLabel(d.unit) : "") + ")"; out.className = "verdict"; }
+  else { out.textContent = what + " is " + pc + "% " + (p > 0 ? "above" : "below") + " your average of " + money(ref) + (perUnit ? " " + unitLabel(d.unit) : ""); out.className = "verdict " + (p > 0 ? "up" : "down"); }
+});
+
+// Uploading to, and reading from, the Google Sheet.
 async function call(body) {
   const r = await fetch(api(), { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify(Object.assign({ key: SET.key }, body)), redirect: "follow" });
@@ -1228,14 +1346,24 @@ async function sync() {
     PENDING = PENDING.filter(p => !sent.some(s => s.id === p.id)); LS.set("gi2_pending", PENDING);
     EDITS = EDITS.filter(e => !sentEd.includes(e)); LS.set("gi2_edits", EDITS);
     applyData(j, sentAl);
-    toast(sent.length ? "Uploaded " + sent.length + (sent.length === 1 ? " price" : " prices") + (sentEd.length ? " and " + sentEd.length + (sentEd.length === 1 ? " item change" : " item changes") : "") : sentEd.length ? "Uploaded " + sentEd.length + (sentEd.length === 1 ? " item change" : " item changes") : "Up to date");
+    const parts = [];
+    if (sent.length) parts.push(plural(sent.length, "price"));
+    if (sentEd.length) parts.push(plural(sentEd.length, "item change"));
+    toast(parts.length ? "Uploaded " + parts.join(" and ") : "Up to date");
   } catch (e) {
     toast("Upload failed: " + e.message + ". Prices are still saved here.");
   }
   busy = false; recalc();
 }
 
-// ---- dialogs ----
+// ---- events ----
+
+$("#up").addEventListener("click", sync);
+
+window.addEventListener("online", () => { updateTop(); });
+window.addEventListener("offline", updateTop);
+
+// Settings, sign-in link and staying signed in.
 const b64 = o => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const unb64 = t => JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g, "+").replace(/_/g, "/")))));
 function signInLink() {
@@ -1291,6 +1419,15 @@ function saveSettings() {
   LS.set("gi2_set", SET); $("#setdlg").close(); updateTop();
   if (configured() && navigator.onLine) refresh();
 }
+
+// ---- events ----
+$("#gear").addEventListener("click", openSettings);
+$("#s-save").addEventListener("click", saveSettings);
+$("#s-copy").addEventListener("click", copyLink);
+$("#s-out").addEventListener("click", signOut);
+
+// The + Item dialog.
+$("#n-unit").innerHTML = unitOptions("ea");
 function openNew() {
   const all = [...STAT.values()];
   $("#dl-store").innerHTML = [...new Set(all.map(e => e.store))].map(s => `<option value="${esc(s)}">`).join("");
@@ -1314,18 +1451,14 @@ function submitNew(ev) {
   q = it; $("#q").value = it; apply();
 }
 
-// ---- receipt scanning ----
-let scanAbort = false, scanWorker = null, RS = null;
+// ---- events ----
 
-function ctx(store) {
-  return { store: store || null, aliases: ALIASES,
-    items: [...STAT.values()].map(e => ({ store: e.store, item: e.item, pack: e.pack, unit: e.unit, qty: e.qty, each: e.each, category: e.category, avg: e.avg })) };
-}
-function canon(st, name) {
-  const n = String(name || "").trim().toLowerCase(); if (!n) return null;
-  for (const e of STAT.values()) if (e.store === st && e.item.toLowerCase() === n) return e.item;
-  return null;
-}
+$("#newbtn").addEventListener("click", openNew);
+$("#nf").addEventListener("submit", submitNew);
+
+// Receipt photos: preparing the image and reading it with Tesseract.
+let scanAbort = false, scanWorker = null;
+
 function loadScript(src) {
   return new Promise((res, rej) => {
     const el = document.createElement("script"); el.src = src; el.onload = res;
@@ -1434,58 +1567,127 @@ async function runScan(file) {
   }
 }
 
+// ---- events ----
+
+$("#scan").addEventListener("click", () => { $("#rfile").value = ""; $("#rfile").click(); });
+$("#rfile").addEventListener("change", e => { const f = e.target.files && e.target.files[0]; if (f) runScan(f); });
+$("#r-cancel").addEventListener("click", () => { scanAbort = true; try { if (scanWorker) scanWorker.terminate(); } catch (e) {} scanWorker = null; $("#rdlg").close(); });
+
+// The receipt review screen: scanned lines are checked and edited here before they are added.
+//
+// RS holds the screen's state:
+//   { text, store, date, dateGuess, res, rows }
+// and every row is a plain object. Rows come from the scan, or from "Add a missed item" (row.manual).
+//   item, price, on       what will be logged, and whether the tick box is on
+//   desc, qty, note       what the receipt said, how many were bought, and warnings about the line
+//   unit, size, each      the item's comparison unit, what this purchase contains, what one piece weighs
+//   cat, pack, existing   category and pack label; whether the item is already in the list
+
+let RS = null; // the open review, or null
+
+// ---- matching context ----
+// What the receipt reader is allowed to match against.
+function ctx(store) {
+  return { store: store || null, aliases: ALIASES,
+    items: [...STAT.values()].map(e => ({ store: e.store, item: e.item, pack: e.pack, unit: e.unit, qty: e.qty, each: e.each, category: e.category, avg: e.avg })) };
+}
+// The list's own spelling of an item for this store, or null if it is not in the list.
+function canon(st, name) {
+  const n = String(name || "").trim().toLowerCase(); if (!n) return null;
+  for (const e of STAT.values()) if (e.store === st && e.item.toLowerCase() === n) return e.item;
+  return null;
+}
+const existingItem = (r) => STAT.get(key(RS.store.trim(), r.item));
+
+// ---- row model ----
+// What a row starts with in the editor: the item's entry in your list if it has one, otherwise what the receipt suggests.
+function detailsFor(r) {
+  const ex = existingItem(r);
+  if (ex) return { cat: ex.category || "", pack: ex.pack || "", unit: ex.unit || "", each: ex.each || "", usual: ex.qty || "", existing: true };
+  const n = r.newItem || {};
+  return { cat: r.cat || n.category || "", pack: n.pack || "", unit: n.unit || "ea", each: "", usual: "", existing: false };
+}
+function rowFromScan(scanned) {
+  const row = Object.assign({}, scanned, { cat: scanned.category });
+  return Object.assign(row, detailsFor(row));
+}
+// A row for an item the scan missed. It stays unticked until it has a name and a price.
+function blankRow() {
+  return { manual: true, open: true, on: false, item: "", desc: "", price: null, qty: 1, note: [], status: "new", pk: null,
+    cat: "", pack: "", unit: "ea", each: "", usual: "", existing: false, size: 1, needEach: false };
+}
+// How much of the item's unit this purchase holds. For a list item it is worked out from the receipt (a 5 pack x 0.12 kg is 0.6 kg).
+function recomputeSize(r) {
+  if (r.sizeManual) return;
+  if (r.existing) {
+    const z = ReceiptLib.sizeFor(r.pk, { unit: r.unit, qty: r.usual, each: r.each });
+    r.size = z.size; r.needEach = z.how === "needEach";
+  } else {
+    r.needEach = false;
+    if (r.newItem && r.newItem.qty !== "" && r.newItem.qty != null) r.size = r.newItem.qty;
+  }
+}
+const same = (a, b) => String(a == null ? "" : a).trim() === String(b == null ? "" : b).trim();
+// Only what belongs to the item changes the list: category, unit and what one piece weighs. The size belongs to this purchase.
+const changedFrom = (ex, r) => !same(r.cat, ex.category) || !same(r.unit, ex.unit) || !same(r.each, ex.each || "");
+const isReady = r => r.on && r.price > 0 && r.item.trim();
+// After choosing a list item for a manual or scanned row: load its unit and category, and work the size out again.
+function adoptListItem(r) {
+  const d = detailsFor(r);
+  if (d.existing || r.existing) { Object.assign(r, d, { existing: d.existing }); r.sizeManual = false; recomputeSize(r); return true; }
+  r.existing = false;
+  return false;
+}
+
+// ---- opening the screen ----
 function openReview(res) {
   RS = { text: res.text, store: res.store || "", date: res.date || today(), dateGuess: !res.date, res, rows: [] };
   fillRows(res);
-  const stores = [...new Set([...STAT.values()].map(e => e.store))];
-  $("#dl-rstore").innerHTML = stores.map(s => `<option value="${esc(s)}">`).join("");
+  $("#dl-rstore").innerHTML = optionList([...new Set([...STAT.values()].map(e => e.store))]);
   $("#r-store").value = RS.store; $("#r-date").value = RS.date;
   $("#r-busy").hidden = true; $("#r-review").hidden = false; $("#rdlg").classList.add("full");
   if (!$("#rdlg").open) $("#rdlg").showModal();
   $("#r-scroll").scrollTop = 0;
 }
+// Builds the rows from a reading. Rows added by hand are kept when the store is changed.
 function fillRows(res) {
   RS.res = res;
-  RS.rows = res.rows.map(r => { const o = Object.assign({}, r, { cat: r.category }); Object.assign(o, detailsFor(o)); return o; });
+  const kept = RS.rows.filter(r => r.manual);
+  RS.rows = res.rows.map(rowFromScan).concat(kept);
+  kept.forEach(r => { if (r.item.trim()) { adoptListItem(r); recomputeSize(r); } });
   const stName = RS.store.trim();
-  $("#dl-ritems").innerHTML = [...STAT.values()].filter(e => !stName || e.store === stName).map(e => `<option value="${esc(e.item)}">`).join("");
-  $("#dl-cat").innerHTML = [...new Set([...STAT.values()].map(e => e.category))].map(c => `<option value="${esc(c)}">`).join("");
-  const box = $("#r-check"), money0 = n => n == null ? "?" : money(n);
-  const bd = res.basketDiscount > 0 ? " The " + money(res.basketDiscount) + " store-wide discount is not included in the item prices." : "";
-  if (res.checkOk && !res.inferredFromTotal && !res.repaired && !res.merged && res.countOk !== false) { box.className = "rcheck ok"; box.textContent = "✓ Prices add up to the receipt total (" + money(res.subtotal) + ")" + (res.count ? " and all " + res.count + " items were found." : ".") + bd; }
-  else if (res.checkOk && res.repaired) { box.className = "rcheck bad"; box.textContent = "Prices add up to the receipt total (" + money(res.subtotal) + "), but " + res.repaired + (res.repaired === 1 ? " price looked" : " prices looked") + " misread and " + (res.repaired === 1 ? "was" : "were") + " corrected. Check the lines marked below." + bd; }
-  else if (res.checkOk && res.merged) { box.className = "rcheck bad"; box.textContent = "Prices add up to the receipt total (" + money(res.subtotal) + "), after combining several readings of the photo. Check the lines marked below." + bd; }
-  else if (res.checkOk && res.inferredFromTotal) { box.className = "rcheck bad"; box.textContent = "One price was unreadable, so it was worked out from the total (" + money(res.subtotal) + "). Check the line marked below."; }
-  else if (res.checkOk) { box.className = "rcheck bad"; box.textContent = "Prices add up to " + money(res.subtotal) + ", but the receipt lists " + res.count + " items and " + res.itemCount + " were found. Check lines you bought more than once." + bd; }
-  else if (res.subtotal == null) { box.className = "rcheck bad"; box.textContent = res.profile === "costco" ? "The receipt total was not in the photo, so the prices could not be checked. Next time include the bottom of the receipt. For now, compare each line with the receipt." : "The total could not be read, so the prices could not be checked. Compare each line with the receipt."; }
-  else if (res.suspects) { box.className = "rcheck bad"; box.textContent = "Lines add up to " + money0(res.sum) + " but the receipt total is " + money(res.subtotal) + ". The lines marked below might be misread: compare them with the receipt." + bd; }
-  else { box.className = "rcheck bad"; box.textContent = "Lines add up to " + money0(res.sum) + " but the receipt total is " + money(res.subtotal) + ". A price may be misread, or a line was missed: compare with the receipt." + bd; }
-  if (RS.dateGuess) box.textContent += " The date was not found, so today's date is used.";
+  $("#dl-ritems").innerHTML = optionList([...STAT.values()].filter(e => !stName || e.store === stName).map(e => e.item));
+  $("#dl-cat").innerHTML = optionList([...new Set([...STAT.values()].map(e => e.category))]);
+  const box = $("#r-check"), c = checkMessage(res);
+  box.className = "rcheck " + (c.ok ? "ok" : "bad");
+  box.textContent = c.text + (RS.dateGuess ? " The date was not found, so today's date is used." : "");
   renderRows();
 }
-const UNITS = [["kg", "per kg"], ["L", "per L"], ["100g", "per 100g"], ["ea", "each"], ["egg", "per egg"], ["roll", "per roll"], ["can", "per can"], ["tablet", "per tablet"], ["capsule", "per capsule"], ["sachet", "per sachet"], ["bag", "per bag"], ["box", "per box"]];
-function unitOptions(cur) {
-  const list = UNITS.slice(); if (cur && !list.some(u => u[0] === cur)) list.push([cur, "per " + cur]);
-  return list.map(([v, l]) => `<option value="${esc(v)}"${v === cur ? " selected" : ""}>${esc(l)}</option>`).join("");
+// The sentence under the date: whether the lines add up to the receipt, and what to look at if they do not.
+function checkMessage(res) {
+  const total = res.subtotal == null ? "?" : money(res.subtotal), sum = res.sum == null ? "?" : money(res.sum);
+  const basket = res.basketDiscount > 0 ? " The " + money(res.basketDiscount) + " store-wide discount is not included in the item prices." : "";
+  const found = res.count ? " and all " + res.count + " items were found." : ".";
+  const addsUp = "Prices add up to the receipt total (" + total + ")";
+  const bad = text => ({ ok: false, text });
+  if (res.checkOk && !res.inferredFromTotal && !res.repaired && !res.merged && res.countOk !== false) return { ok: true, text: "✓ " + addsUp + found + basket };
+  if (res.checkOk && res.repaired) return bad(addsUp + ", but " + plural(res.repaired, "price") + (res.repaired === 1 ? " looked misread and was corrected." : " looked misread and were corrected.") + " Check the lines marked below." + basket);
+  if (res.checkOk && res.merged) return bad(addsUp + ", after combining several readings of the photo. Check the lines marked below." + basket);
+  if (res.checkOk && res.inferredFromTotal) return bad("One price was unreadable, so it was worked out from the total (" + total + "). Check the line marked below.");
+  if (res.checkOk) return bad("Prices add up to " + total + ", but the receipt lists " + res.count + " items and " + res.itemCount + " were found. Check lines you bought more than once." + basket);
+  if (res.subtotal == null) return bad(res.profile === "costco"
+    ? "The receipt total was not in the photo, so the prices could not be checked. Next time include the bottom of the receipt. For now, compare each line with the receipt."
+    : "The total could not be read, so the prices could not be checked. Compare each line with the receipt.");
+  const off = "Lines add up to " + sum + " but the receipt total is " + total + ". ";
+  if (res.suspects) return bad(off + "The lines marked below might be misread: compare them with the receipt." + basket);
+  return bad(off + "A price may be misread, or a line was missed: compare with the receipt." + basket);
 }
-// What a scanned row starts with in the editor: the item's entry in your list if it has one, otherwise what the receipt suggests.
-function detailsFor(r) {
-  const ex = STAT.get(key(RS.store.trim(), r.item));
-  if (ex) return { cat: ex.category || "", pack: ex.pack || "", unit: ex.unit || "", each: ex.each || "", usual: ex.qty || "", existing: true };
-  const n = r.newItem || {};
-  return { cat: r.cat || n.category || "", pack: n.pack || "", unit: n.unit || "ea", each: "", usual: "", existing: false };
-}
-// How much of the item's unit this purchase holds. For a list item it is worked out from the receipt (a 5 pack x 0.12 kg is 0.6 kg).
-function recomputeSize(r) {
-  if (r.sizeManual) return;
-  if (r.existing) { const z = ReceiptLib.sizeFor(r.pk, { unit: r.unit, qty: r.usual, each: r.each }); r.size = z.size; r.needEach = z.how === "needEach"; }
-  else { r.needEach = false; if (r.newItem && r.newItem.qty !== "" && r.newItem.qty != null) r.size = r.newItem.qty; }
-}
-const same = (a, b) => String(a == null ? "" : a).trim() === String(b == null ? "" : b).trim();
-// Only what belongs to the item changes the list: category, unit and what one piece weighs. The size belongs to this purchase.
-function changedFrom(ex, r) { return !same(r.cat, ex.category) || !same(r.unit, ex.unit) || !same(r.each, ex.each || ""); }
+
+// ---- row view ----
+const tagText = r => r.isNew ? "New item" : (r.status === "maybe" && r.item === r.matched ? "Check this match" : "");
+
 function calcHtml(r) {
-  const q = Number(r.size), ex = STAT.get(key(RS.store.trim(), r.item));
+  const q = Number(r.size), ex = existingItem(r);
   if (r.needEach && !(q > 0)) return "Enter what one piece " + (r.unit === "L" ? "holds" : "weighs") + " below to work out the price per " + esc(r.unit) + ".";
   if (!(r.price > 0) || !(q > 0) || !r.unit) return "Enter the price and what this pack contains to see the price per unit.";
   let t = "Works out at <b>" + money(r.price / q) + " " + esc(unitLabel(r.unit)) + "</b>";
@@ -1493,7 +1695,7 @@ function calcHtml(r) {
   return t;
 }
 function helpHtml(r) {
-  const ex = STAT.get(key(RS.store.trim(), r.item));
+  const ex = existingItem(r);
   if (!ex) return r.item.trim() ? "New item: it is added to your list when you upload." : "";
   return changedFrom(ex, r) ? "This changes the item in your list when you upload." : "In your list: usual pack " + esc(ex.pack || "not set") + ", compared " + esc(unitLabel(ex.unit)) + ".";
 }
@@ -1503,13 +1705,14 @@ function unitLine(r) {
   return esc(q + " " + sizeLabel(r.unit)) + (r.price > 0 ? " &middot; " + money(r.price / q) + " " + esc(unitLabel(r.unit)) : "");
 }
 function detailsHtml(r) {
+  const holds = r.unit === "L" ? "holds" : "weighs";
   return `<div class="rdetails"${r.open ? "" : " hidden"}>
       <div class="two">
-        <div><label class="rl-size">This pack contains (${esc(sizeLabel(r.unit))})</label><input class="rk-size" type="number" inputmode="decimal" step="any" min="0" value="${esc(r.size == null ? "" : r.size)}"></div>
+        <div><label>This pack contains (${esc(sizeLabel(r.unit))})</label><input class="rk-size" type="number" inputmode="decimal" step="any" min="0" value="${esc(r.size == null ? "" : r.size)}"></div>
         <div><label>Compare by</label><select class="rk-unit">${unitOptions(r.unit)}</select></div>
       </div>
       <div class="two">
-        <div class="rk-each-wrap"${isMeasure(r.unit) ? "" : " hidden"}><label>One piece ${r.unit === "L" ? "holds" : "weighs"} (${esc(r.unit)})</label><input class="rk-each" type="number" inputmode="decimal" step="any" min="0" value="${esc(r.each)}" placeholder="${r.unit === "L" ? "e.g. 0.25" : "e.g. 0.12"}"></div>
+        <div class="rk-each-wrap"${isMeasure(r.unit) ? "" : " hidden"}><label>One piece ${holds} (${esc(r.unit)})</label><input class="rk-each" type="number" inputmode="decimal" step="any" min="0" value="${esc(r.each)}" placeholder="${r.unit === "L" ? "e.g. 0.25" : "e.g. 0.12"}"></div>
         <div><label>Category</label><input class="rk-cat" list="dl-cat" value="${esc(r.cat || "")}" autocomplete="off"></div>
       </div>
       ${r.existing ? "" : `<div class="two"><div><label>Pack label</label><input class="rk-pack" value="${esc(r.pack)}" placeholder="500g" autocomplete="off" autocapitalize="none"></div></div>`}
@@ -1520,23 +1723,38 @@ function detailsHtml(r) {
 function rowHtml(r, i) {
   r.isNew = !canon(RS.store.trim(), r.item);
   const notes = r.note.map(n => `<div class="rnote">${esc(n)}</div>`).join("");
+  const source = r.manual ? "Added by you" : esc(r.desc) + (r.qty > 1 ? " &middot; " + r.qty + " bought" : "");
+  const pricePlaceholder = r.weighed || r.hasRate ? "$/kg" : "$";
   return `<div class="rrow" data-i="${i}">
     <div class="rline"><input type="checkbox" class="rc"${r.on ? " checked" : ""} aria-label="Add this price">
-      <input class="ri" list="dl-ritems" value="${esc(r.item)}" aria-label="Item" autocomplete="off" autocapitalize="none" spellcheck="false">
-      <input class="rp" type="number" inputmode="decimal" step="0.01" min="0" value="${r.price != null ? r.price.toFixed(2) : ""}" placeholder="${r.weighed || r.hasRate ? "$/kg" : "$"}" aria-label="Price"></div>
-    <div class="rsub"><span>${esc(r.desc)}${r.qty > 1 ? " &middot; " + r.qty + " bought" : ""}</span><span class="rtag">${tagText(r)}</span></div>
+      <input class="ri" list="dl-ritems" value="${esc(r.item)}" placeholder="${r.manual ? "Item name" : ""}" aria-label="Item" autocomplete="off" autocapitalize="none" spellcheck="false">
+      <input class="rp" type="number" inputmode="decimal" step="0.01" min="0" value="${r.price != null ? r.price.toFixed(2) : ""}" placeholder="${pricePlaceholder}" aria-label="Price"></div>
+    <div class="rsub"><span>${source}</span><span class="rtag">${tagText(r)}</span></div>
     <div class="rsub rul">${unitLine(r)}</div>
     ${notes}
     <button class="rdet" type="button" aria-expanded="${r.open ? "true" : "false"}">${r.open ? "Hide details" : "Edit details"}</button>
     ${detailsHtml(r)}
   </div>`;
 }
-const tagText = r => r.isNew ? "New item" : (r.status === "maybe" && r.item === r.matched ? "Check this match" : "");
 function renderRows() { $("#r-rows").innerHTML = RS.rows.map(rowHtml).join(""); updateAdd(); }
 function updateAdd() {
-  const n = RS.rows.filter(r => r.on && r.price > 0 && r.item.trim()).length;
-  const b = $("#r-add"); b.textContent = n ? "Add " + n + (n === 1 ? " price" : " prices") : "Add prices"; b.disabled = !n;
+  const n = RS.rows.filter(isReady).length;
+  const b = $("#r-add"); b.textContent = n ? "Add " + plural(n, "price") : "Add prices"; b.disabled = !n;
 }
+// Updates the parts of one row that depend on its numbers, without re-drawing it (which would close the keyboard).
+function refreshRow(row, r) {
+  row.querySelector(".rtag").textContent = tagText(r);
+  row.querySelector(".rul").innerHTML = unitLine(r);
+  row.querySelector(".rcalc").innerHTML = calcHtml(r);
+  row.querySelector(".rhelp").innerHTML = helpHtml(r);
+}
+function renderDetails(row, r) {
+  const old = row.querySelector(".rdetails"), tmp = document.createElement("div");
+  tmp.innerHTML = detailsHtml(r); old.replaceWith(tmp.firstElementChild);
+}
+function tick(row, r) { r.on = true; row.querySelector(".rc").checked = true; }
+
+// ---- adding to the log ----
 function addAlias(text, st, item) {
   const k = aliasKey({ text, store: st, item });
   if (ALIASES.some(a => aliasKey(a) === k)) return;
@@ -1549,81 +1767,75 @@ function addReceipt() {
   const have = new Set(), sig = (s, i, d, p) => [s, i, d, Number(p).toFixed(2)].join("|");
   LOG.forEach(l => have.add(sig(l.store, l.item, l.date, l.price))); PENDING.forEach(p => have.add(sig(p.store, p.item, p.date, p.price)));
   let added = 0, dup = 0, edited = 0, nosize = 0;
-  RS.rows.forEach(r => {
-    if (!r.on || !(r.price > 0) || !r.item.trim()) return;
+  RS.rows.filter(isReady).forEach(r => {
     const name = canon(st, r.item) || r.item.trim(), price = Math.round(r.price * 100) / 100, ex = STAT.get(key(st, name));
     const size = Number(r.size) > 0 ? Number(r.size) : null;
     if (r.needEach && !size) { nosize++; return; }
-    const eachV = String(r.each).trim() === "" || isNaN(Number(r.each)) ? "" : Number(r.each);
-    const det = { category: (r.cat || "").trim() || "Other", pack: (r.pack || "").trim(), unit: r.unit || "ea", qty: size == null ? "" : size, each: eachV };
+    const each = String(r.each).trim() === "" || isNaN(Number(r.each)) ? "" : Number(r.each);
+    const det = { category: (r.cat || "").trim() || "Other", pack: (r.pack || "").trim(), unit: r.unit || "ea", qty: size == null ? "" : size, each };
     // Changes to the item itself (category, unit, what one piece weighs) go to the sheet as an update, but only if something really changed.
-    if (ex && changedFrom(ex, { cat: det.category, unit: det.unit, each: eachV })) {
-      EDITS = EDITS.filter(e => !(e.store === st && e.item === name)).concat([{ store: st, item: name, category: det.category, unit: det.unit, each: eachV }]); edited++;
+    if (ex && changedFrom(ex, { cat: det.category, unit: det.unit, each })) {
+      EDITS = EDITS.filter(e => !(e.store === st && e.item === name)).concat([{ store: st, item: name, category: det.category, unit: det.unit, each }]); edited++;
     }
     if (have.has(sig(st, name, date, price))) { dup++; return; }
     have.add(sig(st, name, date, price));
     PENDING.push(Object.assign({ id: uid(), who: SET.who || "", store: st, item: name, price, date }, size ? { size } : {}, ex ? {} : { newItem: det }));
-    addAlias(r.desc, st, name); added++;
+    if (r.desc) addAlias(r.desc, st, name); // remembers the receipt's wording, so the next scan matches it
+    added++;
   });
   const ok = LS.set("gi2_pending", PENDING); LS.set("gi2_alias", ALIASES); LS.set("gi2_edits", EDITS);
   $("#rdlg").close(); recalc();
-  toast((ok ? "" : "Could not save on this phone. ") + "Added " + added + (added === 1 ? " price" : " prices") + (edited ? ", " + edited + (edited === 1 ? " item changed" : " items changed") : "") + (dup ? ", " + dup + " already logged" : "") + (nosize ? ". " + nosize + " left out: weight of one piece needed" : "") + ". Tap Upload when you have signal.");
+  const parts = ["Added " + plural(added, "price")];
+  if (edited) parts.push(plural(edited, "item") + " changed");
+  if (dup) parts.push(dup + " already logged");
+  toast((ok ? "" : "Could not save on this phone. ") + parts.join(", ") + (nosize ? ". " + nosize + " left out: weight of one piece needed" : "") + ". Tap Upload when you have signal.");
 }
 
 // ---- events ----
-$("#q").addEventListener("input", e => { q = e.target.value; apply(); });
-$("#clr").addEventListener("click", () => { q = ""; $("#q").value = ""; apply(); $("#q").focus(); });
-$("#sort").addEventListener("change", e => { sort = e.target.value; apply(); });
-$("#scan").addEventListener("click", () => { $("#rfile").value = ""; $("#rfile").click(); });
-$("#rfile").addEventListener("change", e => { const f = e.target.files && e.target.files[0]; if (f) runScan(f); });
-$("#r-cancel").addEventListener("click", () => { scanAbort = true; try { if (scanWorker) scanWorker.terminate(); } catch (e) {} scanWorker = null; $("#rdlg").close(); });
 $("#r-close").addEventListener("click", () => $("#rdlg").close());
 $("#r-add").addEventListener("click", addReceipt);
 $("#r-date").addEventListener("change", e => { RS.date = e.target.value; });
 $("#r-store").addEventListener("change", e => { RS.store = e.target.value; fillRows(ReceiptLib.analyse(RS.text, ctx(RS.store.trim()))); });
-function refreshRow(row, r) {
-  row.querySelector(".rtag").textContent = tagText(r);
-  row.querySelector(".rul").innerHTML = unitLine(r);
-  row.querySelector(".rcalc").innerHTML = calcHtml(r);
-  row.querySelector(".rhelp").innerHTML = helpHtml(r);
-}
-function renderDetails(row, r) {
-  const old = row.querySelector(".rdetails"), tmp = document.createElement("div");
-  tmp.innerHTML = detailsHtml(r); old.replaceWith(tmp.firstElementChild);
-}
+
+$("#r-more").addEventListener("click", () => {
+  RS.rows.push(blankRow()); renderRows();
+  const rows = $("#r-rows").children, last = rows[rows.length - 1];
+  last.scrollIntoView({ block: "center" });
+  last.querySelector(".ri").focus();
+});
+
 $("#r-rows").addEventListener("input", e => {
   const row = e.target.closest(".rrow"); if (!row) return;
   const r = RS.rows[+row.dataset.i], cl = e.target.classList;
   if (cl.contains("ri")) {
-    const v = e.target.value, st = RS.store.trim(); r.item = canon(st, v) || v; r.isNew = !canon(st, v);
-    // Choosing another item from your list loads that item's unit and category and works the size out again. Going back to a new name restores the receipt's own suggestion.
-    const d = detailsFor(r);
-    if (d.existing || r.existing) { Object.assign(r, d, { existing: d.existing }); r.sizeManual = false; recomputeSize(r); renderDetails(row, r); }
-    else r.existing = false;
-    if (!r.on && r.price > 0 && !r.needEach) { r.on = true; row.querySelector(".rc").checked = true; }
+    const typed = e.target.value, st = RS.store.trim();
+    r.item = canon(st, typed) || typed; r.isNew = !canon(st, typed);
+    if (adoptListItem(r)) renderDetails(row, r);
+    if (!r.on && r.price > 0 && !r.needEach) tick(row, r);
     refreshRow(row, r);
   } else if (cl.contains("rp")) {
     const v = parseFloat(e.target.value); r.price = isNaN(v) ? null : v;
-    if (!r.on && v > 0 && !r.needEach) { r.on = true; row.querySelector(".rc").checked = true; }
+    if (!r.on && v > 0 && !r.needEach) tick(row, r);
     row.querySelector(".rcalc").innerHTML = calcHtml(r); row.querySelector(".rul").innerHTML = unitLine(r);
-  } else if (cl.contains("rk-pack")) { r.pack = e.target.value; }
-  else if (cl.contains("rk-size")) { r.size = e.target.value === "" ? null : parseFloat(e.target.value); r.sizeManual = true; r.needEach = false; refreshRow(row, r); }
-  else if (cl.contains("rk-each")) {
-    r.each = e.target.value; const was = r.needEach; recomputeSize(r);
+  } else if (cl.contains("rk-pack")) {
+    r.pack = e.target.value;
+  } else if (cl.contains("rk-size")) {
+    r.size = e.target.value === "" ? null : parseFloat(e.target.value); r.sizeManual = true; r.needEach = false; refreshRow(row, r);
+  } else if (cl.contains("rk-each")) {
+    r.each = e.target.value; const wasBlocked = r.needEach; recomputeSize(r);
     row.querySelector(".rk-size").value = r.size == null ? "" : r.size;
-    if (was && !r.needEach && r.price > 0 && !r.on) { r.on = true; row.querySelector(".rc").checked = true; }
+    if (wasBlocked && !r.needEach && r.price > 0 && !r.on) tick(row, r);
     refreshRow(row, r);
+  } else if (cl.contains("rk-cat")) {
+    r.cat = e.target.value; row.querySelector(".rhelp").innerHTML = helpHtml(r);
   }
-  else if (cl.contains("rk-cat")) { r.cat = e.target.value; row.querySelector(".rhelp").innerHTML = helpHtml(r); }
   updateAdd();
 });
 $("#r-rows").addEventListener("change", e => {
   const row = e.target.closest(".rrow"); if (!row) return;
   const r = RS.rows[+row.dataset.i];
   if (e.target.classList.contains("rc")) { r.on = e.target.checked; updateAdd(); }
-  else if (e.target.classList.contains("rk-unit")) {
-    r.unit = e.target.value; recomputeSize(r); renderDetails(row, r); refreshRow(row, r); updateAdd();
-  }
+  else if (e.target.classList.contains("rk-unit")) { r.unit = e.target.value; recomputeSize(r); renderDetails(row, r); refreshRow(row, r); updateAdd(); }
 });
 $("#r-rows").addEventListener("click", e => {
   const b = e.target.closest(".rdet"); if (!b) return;
@@ -1631,43 +1843,8 @@ $("#r-rows").addEventListener("click", e => {
   r.open = !r.open; row.querySelector(".rdetails").hidden = !r.open;
   b.textContent = r.open ? "Hide details" : "Edit details"; b.setAttribute("aria-expanded", r.open ? "true" : "false");
 });
-$("#stores").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; store = b.dataset.s; chips(); apply(); });
-$("#cats").addEventListener("click", e => {
-  const b = e.target.closest(".chip"); if (!b) return;
-  if (b.dataset.pop) { popOnly = !popOnly; if (popOnly) { sort = "pop"; $("#sort").value = "pop"; } }
-  else cat = b.dataset.c;
-  chips(); apply();
-});
-$("#list").addEventListener("click", e => {
-  const c = e.target.closest(".card"); if (!c) return;
-  if (e.target.closest(".save")) { savePrice(c); return; }
-  if (e.target.closest(".more")) return;
-  const k = c.dataset.k;
-  if (open.has(k)) { open.delete(k); c.classList.remove("open"); c.querySelector(".more").innerHTML = ""; }
-  else { open.add(k); c.classList.add("open"); c.querySelector(".more").innerHTML = moreHtml(STAT.get(k)); }
-});
-$("#list").addEventListener("input", e => {
-  if (!e.target.classList.contains("pin") && !e.target.classList.contains("psz")) return;
-  const c = e.target.closest(".card"), d = STAT.get(c.dataset.k), out = c.querySelector(".verdict"), v = parseFloat(c.querySelector(".pin").value);
-  if (isNaN(v) || !d || !d.pts.length) { out.textContent = ""; out.className = "verdict"; return; }
-  // Compare per unit when the item has one, so a different pack size is allowed for.
-  const szEl = c.querySelector(".psz"), sz = szEl ? parseFloat(szEl.value) : NaN;
-  const perUnit = d.up != null && sz > 0, mine = perUnit ? v / sz : v, ref = perUnit ? d.up : d.avg;
-  const p = (mine - ref) / ref, pc = Math.round(Math.abs(p) * 100), what = perUnit ? money(mine) + " " + unitLabel(d.unit) : money(v);
-  if (pc < 2) { out.textContent = "About your usual price (" + money(ref) + (perUnit ? " " + unitLabel(d.unit) : "") + ")"; out.className = "verdict"; }
-  else { out.textContent = what + " is " + pc + "% " + (p > 0 ? "above" : "below") + " your average of " + money(ref) + (perUnit ? " " + unitLabel(d.unit) : ""); out.className = "verdict " + (p > 0 ? "up" : "down"); }
-});
-$("#up").addEventListener("click", sync);
-$("#gear").addEventListener("click", openSettings);
-$("#s-save").addEventListener("click", saveSettings);
-$("#s-copy").addEventListener("click", copyLink);
-$("#s-out").addEventListener("click", signOut);
-$("#newbtn").addEventListener("click", openNew);
-$("#nf").addEventListener("submit", submitNew);
-window.addEventListener("online", () => { updateTop(); });
-window.addEventListener("offline", updateTop);
 
-// ---- start ----
+// Start up.
 const linked = applySetupLink();
 loadLocal(); recalc();
 if (linked) toast("Signed in on this phone");
